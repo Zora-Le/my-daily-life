@@ -35,7 +35,15 @@ function Modal({
 }
 export default function Page() {
   const { state, update, updateDay, importState } = useLifeStore();
-  const [page, setPage] = useState<PageKey>('daily');
+  const [page, setPage] = useState<PageKey>(() => {
+    if (typeof window === 'undefined') return 'daily';
+    const requested = new URLSearchParams(window.location.search).get('page');
+    return ['daily', 'progress', 'money', 'rewards', 'settings'].includes(
+      requested ?? '',
+    )
+      ? (requested as PageKey)
+      : 'daily';
+  });
   const [date, setDate] = useState(TODAY);
   const [week, setWeek] = useState(weekStart(TODAY));
   const [draft, setDraft] = useState<TaskDraft | null>(null);
