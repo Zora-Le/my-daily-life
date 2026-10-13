@@ -1,4 +1,5 @@
-import { RefreshCw } from 'lucide-react';
+import type { LifeState } from '@/hooks/useLifeStore';
+import { safeCalculate } from '@/lib/lifeUtils';
 import { useState } from 'react';
 import {
   Bar,
@@ -9,7 +10,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-
 const data = [
   { month: '5月', income: 15.2, expense: 9.1 },
   { month: '6月', income: 16.8, expense: 10.6 },
@@ -18,46 +18,74 @@ const data = [
   { month: '9月', income: 17.6, expense: 9.4 },
   { month: '10月', income: 19.3, expense: 9.8 },
 ];
-export function MoneyPage({ notify }: { notify: (text: string) => void }) {
-  const [updated, setUpdated] = useState(false);
+type Saving = LifeState['savings'][number];
+export function MoneyPage({
+  savings,
+  onSavings,
+  notify,
+}: {
+  savings: Saving[];
+  onSavings: (items: Saving[]) => void;
+  notify: (text: string) => void;
+}) {
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState('');
+  const commit = (item: Saving) => {
+    try {
+      const value = safeCalculate(draft);
+      onSavings(
+        savings.map(s =>
+          s.id === item.id ? { ...s, expression: draft, value } : s,
+        ),
+      );
+      setEditing(null);
+    } catch (error) {
+      notify((error as Error).message);
+    }
+  };
+  const total = savings.reduce((sum, item) => sum + item.value, 0);
   return (
     <>
-      <section className="savings-card">
+      <section className="savings-card narrow">
         <div className="savings-top">
           <div>
             <span className="overline">PLATFORM SAVINGS</span>
             <h2>平台储蓄</h2>
           </div>
-          <button
-            onClick={() => {
-              setUpdated(true);
-              notify('季度金额已标记更新');
-            }}
-          >
-            <RefreshCw size={13} />
-            {updated ? '刚刚更新' : '季度更新'}
-          </button>
+          <small>点击岛屿直接计算</small>
         </div>
         <div className="island-map">
           <div className="wave wave-one" />
           <div className="wave wave-two" />
-          <article className="paper-island island-one">
-            <b>¥ 18,620</b>
-            <span>零钱通 · E卡通 · 现金</span>
-          </article>
-          <article className="paper-island island-two">
-            <b>¥ 53,800</b>
-            <span>工商 · 中国 · 招商</span>
-          </article>
-          <article className="paper-island island-three">
-            <b>¥ 9,460</b>
-            <span>支付宝</span>
-          </article>
-          <div className="breeze">⌁</div>
+          {savings.map((item, i) => (
+            <article
+              className={`paper-island island-${['one', 'two', 'three'][i]}`}
+              key={item.id}
+              onClick={() => {
+                setEditing(item.id);
+                setDraft(item.expression);
+              }}
+            >
+              {editing === item.id ? (
+                <input
+                  value={draft}
+                  inputMode="decimal"
+                  onChange={e => setDraft(e.target.value)}
+                  onBlur={() => commit(item)}
+                  onKeyDown={e => e.key === 'Enter' && e.currentTarget.blur()}
+                  onClick={e => e.stopPropagation()}
+                />
+              ) : (
+                <b>¥ {item.value.toLocaleString()}</b>
+              )}
+              <span>{item.detail}</span>
+            </article>
+          ))}
         </div>
         <p className="savings-total">
-          总储蓄 <strong>81,880</strong> 元
+          总储蓄 <strong>{total.toLocaleString()}</strong> 元
         </p>
+        <p className="expression-tip">支持 =1239+1349+16700、括号与四则运算</p>
       </section>
       <section className="life-section">
         <div className="section-heading">

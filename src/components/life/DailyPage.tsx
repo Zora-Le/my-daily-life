@@ -1,157 +1,254 @@
-import { Camera, Check, Pencil, Save } from 'lucide-react';
-import { useState } from 'react';
-import { RunnerIcon } from './LineArt';
-import { type Task, WeekPlanner } from './WeekPlanner';
+import type { DayRecord, LifeTask, Meal } from '@/hooks/useLifeStore';
+import { TODAY, compressImage, formatShort, weekStart } from '@/lib/lifeUtils';
+import { Camera, Crown, Flower2, History, RotateCcw, X } from 'lucide-react';
+import { useRef, useState } from 'react';
+import type { Phase } from './LineArt';
+import { SportIcon } from './LineArt';
+import { WeekPlanner } from './WeekPlanner';
 
-interface Props {
-  tasks: Task[];
-  setTasks: (tasks: Task[]) => void;
-  openTask: (start: string, end: string) => void;
-  notify: (text: string) => void;
-  mealDone: number;
-  setMealDone: (count: number) => void;
-}
 const moods = [
-  { name: '平静', tone: 'calm', mouth: '—' },
+  { name: '平静', tone: 'calm', mouth: '⌣' },
   { name: '开心', tone: 'happy', mouth: '⌣' },
   { name: '疲惫', tone: 'tired', mouth: '﹏' },
   { name: '低落', tone: 'low', mouth: '︵' },
   { name: '暴躁', tone: 'angry', mouth: '⌁' },
 ];
-
-export function DailyPage({
-  tasks,
-  setTasks,
-  openTask,
-  notify,
-  mealDone,
-  setMealDone,
-}: Props) {
-  const [quote, setQuote] = useState('今天也要留一点时间，给风和自己。');
-  const [draft, setDraft] = useState(quote);
-  const [editing, setEditing] = useState(false);
-  const [exercise, setExercise] = useState({ cardio: 1, strength: 0 });
-  const [mood, setMood] = useState('平静');
-  const bump = (key: 'cardio' | 'strength') =>
-    setExercise({ ...exercise, [key]: (exercise[key] + 1) % 3 });
+const mealMeta = [
+  { key: 'breakfast', label: '早餐' },
+  { key: 'lunch', label: '午餐' },
+  { key: 'dinner', label: '晚餐' },
+] as const;
+interface Props {
+  date: string;
+  week: string;
+  day: DayRecord;
+  recordedDates: string[];
+  tasks: LifeTask[];
+  phases: Record<string, Phase>;
+  onDate: (date: string) => void;
+  onWeek: (date: string) => void;
+  onDay: (day: DayRecord) => void;
+  onTasks: (tasks: LifeTask[]) => void;
+  onPhase: (date: string, phase: Phase) => void;
+  openTask: (start: string, end: string) => void;
+  notify: (text: string) => void;
+}
+export function DailyPage(props: Props) {
+  const {
+    date,
+    week,
+    day,
+    recordedDates,
+    tasks,
+    phases,
+    onDate,
+    onWeek,
+    onDay,
+    onTasks,
+    onPhase,
+    openTask,
+    notify,
+  } = props;
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const uploads = useRef<Record<string, HTMLInputElement | null>>({});
+  const setMeal = (key: keyof DayRecord['meals'], patch: Partial<Meal>) =>
+    onDay({
+      ...day,
+      meals: { ...day.meals, [key]: { ...day.meals[key], ...patch } },
+    });
+  const selectDate = (next: string) => {
+    onDate(next);
+    onWeek(weekStart(next));
+  };
   return (
     <>
-      <section className="daily-quote">
-        <span className="color-block" />
-        <div>
-          {editing ? (
-            <input value={draft} onChange={e => setDraft(e.target.value)} />
+      <div className="save-banner">
+        <span>✓ 已自动保存在此设备</span>
+        <button onClick={() => setHistoryOpen(!historyOpen)}>
+          <History size={13} />
+          历史 / 回顾
+        </button>
+      </div>
+      <div className="date-toolbar">
+        <label>
+          <span>正在记录</span>
+          <input
+            type="date"
+            value={date}
+            onChange={e => selectDate(e.target.value)}
+          />
+        </label>
+        {date !== TODAY && (
+          <button onClick={() => selectDate(TODAY)}>
+            <RotateCcw size={13} />
+            回到今天
+          </button>
+        )}
+      </div>
+      {historyOpen && (
+        <div className="history-panel">
+          <b>最近有记录</b>
+          {recordedDates.length ? (
+            recordedDates.slice(0, 8).map(item => (
+              <button
+                key={item}
+                onClick={() => {
+                  selectDate(item);
+                  setHistoryOpen(false);
+                }}
+              >
+                {formatShort(item)}
+              </button>
+            ))
           ) : (
-            <p>{quote}</p>
+            <small>还没有更早的记录</small>
           )}
         </div>
-        <button
-          onClick={() => {
-            if (editing) {
-              setQuote(draft || quote);
-              notify('今日一句已保存');
-            }
-            setEditing(!editing);
-          }}
-          aria-label={editing ? '保存每日一句' : '编辑每日一句'}
-        >
-          {editing ? <Save size={15} /> : <Pencil size={15} />}
-        </button>
-      </section>
-      <WeekPlanner tasks={tasks} setTasks={setTasks} openTask={openTask} />
+      )}
+      <WeekPlanner
+        tasks={tasks}
+        week={week}
+        selectedDate={date}
+        phasesByDate={phases}
+        onWeekChange={onWeek}
+        onSelectDate={onDate}
+        onPhase={onPhase}
+        onTasks={onTasks}
+        openTask={openTask}
+      />
       <section className="life-section">
         <div className="section-heading">
           <div>
             <h2>daily diet</h2>
-            <p>细嚼慢咽 + 七分饱</p>
+            <p>{formatShort(date)} · 写下三餐，也可以留一张小图</p>
           </div>
-          <button
-            className="text-action"
-            onClick={() => notify('三餐记录已保存')}
-          >
-            保存
-          </button>
         </div>
         <div className="meal-row">
-          {['早餐', '午餐', '晚餐'].map((meal, i) => (
-            <article className={i < mealDone ? 'recorded' : ''} key={meal}>
+          {mealMeta.map(({ key, label }) => (
+            <article
+              className={
+                day.meals[key].text || day.meals[key].image ? 'recorded' : ''
+              }
+              key={key}
+            >
               <div className="meal-top">
-                <span>{meal}</span>
-                {i < mealDone && <Check size={13} />}
+                <span>{label}</span>
+                {day.meals[key].image && (
+                  <button
+                    className="mini-remove"
+                    onClick={() => setMeal(key, { image: undefined })}
+                  >
+                    <X size={10} />
+                  </button>
+                )}
               </div>
-              <button
-                onClick={() => {
-                  setMealDone(Math.max(mealDone, i + 1));
-                  notify(`${meal}图片选择器已打开`);
+              <textarea
+                value={day.meals[key].text}
+                onChange={e => setMeal(key, { text: e.target.value })}
+                placeholder="吃了什么？"
+                rows={2}
+              />
+              {day.meals[key].image ? (
+                <button
+                  className="meal-thumb"
+                  onClick={() => uploads.current[key]?.click()}
+                >
+                  <img src={day.meals[key].image} alt={`${label}记录`} />
+                </button>
+              ) : (
+                <button
+                  className="meal-add"
+                  onClick={() => uploads.current[key]?.click()}
+                >
+                  <Camera size={15} />
+                  <small>添图</small>
+                </button>
+              )}
+              <input
+                ref={node => {
+                  uploads.current[key] = node;
                 }}
-              >
-                <Camera size={18} />
-                <small>
-                  {i === 0
-                    ? '酸奶与莓果'
-                    : i === 1
-                      ? '番茄牛腩饭'
-                      : i < mealDone
-                        ? '清炒时蔬'
-                        : '添加图片'}
-                </small>
-              </button>
+                hidden
+                type="file"
+                accept="image/*"
+                onChange={async e => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    setMeal(key, {
+                      image: await compressImage(file, 520, 0.65),
+                    });
+                    notify('图片已压缩并保存');
+                  } catch (err) {
+                    notify((err as Error).message);
+                  }
+                }}
+              />
             </article>
           ))}
         </div>
       </section>
       <section className="life-section">
         <div className="section-heading">
-          <div>
-            <h2>运动</h2>
-            <p>轻点进度条，每次完成一半</p>
-          </div>
+          <h2>运动</h2>
         </div>
         <div className="exercise-list">
           {(['cardio', 'strength'] as const).map(key => (
             <button
-              className="exercise-row"
+              className={`exercise-row ${day.exercise[key] ? 'completed' : ''}`}
               key={key}
-              onClick={() => bump(key)}
+              onClick={() =>
+                onDay({
+                  ...day,
+                  exercise: { ...day.exercise, [key]: !day.exercise[key] },
+                })
+              }
             >
               <span className="sport-icon">
-                <RunnerIcon strength={key === 'strength'} />
+                <SportIcon strength={key === 'strength'} />
               </span>
               <span className="sport-copy">
-                <b>{key === 'cardio' ? '有氧' : '无氧'}</b>
-                <small>{exercise[key]}/2 次 · 点击打卡</small>
-                <span className="exercise-track">
-                  <i style={{ width: `${exercise[key] * 50}%` }} />
-                  <em />
-                </span>
+                <b>{key === 'cardio' ? '有氧 · 游泳' : '无氧 · 力量'}</b>
               </span>
-              <strong>{exercise[key] * 50}%</strong>
+              <strong>{day.exercise[key] ? '已做过' : '轻点打卡'}</strong>
             </button>
           ))}
         </div>
       </section>
       <section className="life-section mood-section">
         <div className="section-heading">
-          <h2>今天感觉怎样？</h2>
+          <h2>这一天感觉怎样？</h2>
         </div>
         <div className="mood-row">
-          {moods.map(item => (
-            <button
-              className={`pixel-mood ${item.tone} ${mood === item.name ? 'selected' : ''}`}
-              key={item.name}
-              onClick={() => {
-                setMood(item.name);
-                notify(`已记下：${item.name}`);
-              }}
-            >
-              <span className="pixel-face">
-                <i />
-                <i />
-                <b>{item.mouth}</b>
-              </span>
-              <small>{item.name}</small>
-            </button>
-          ))}
+          {moods.map(item => {
+            const selected = day.mood === item.name;
+            return (
+              <button
+                className={`pixel-mood ${item.tone} ${selected ? 'selected' : ''}`}
+                key={item.name}
+                onClick={() => onDay({ ...day, mood: item.name })}
+              >
+                <span className="pixel-face">
+                  <i />
+                  <i />
+                  <b>{item.mouth}</b>
+                  {selected && item.tone === 'calm' && (
+                    <Crown className="mood-crown" />
+                  )}
+                  {selected && item.tone === 'happy' && (
+                    <Flower2 className="mood-flower" />
+                  )}
+                  {selected && item.tone === 'tired' && (
+                    <em className="mood-zzz">zzz</em>
+                  )}
+                  {selected && item.tone === 'angry' && (
+                    <em className="mood-fire">♨♨♨</em>
+                  )}
+                </span>
+                <small>{item.name}</small>
+              </button>
+            );
+          })}
         </div>
       </section>
     </>

@@ -1,55 +1,81 @@
-import { Camera, ChevronDown, LockKeyhole, Sparkles } from 'lucide-react';
+import type { RewardCard } from '@/hooks/useLifeStore';
+import {
+  Cat,
+  Flower2,
+  LockKeyhole,
+  Paintbrush,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
-
-const joyCards = [
-  '调一杯喜欢的饮品',
-  '吹一吹秋季晚风',
-  '看看小猫咪',
-  '晒冬日暖阳',
-  '联系一位亲友',
-];
-const sweetCards = [
-  { no: '01', title: '黄昏散步', copy: '风把今天吹得很轻。', tone: 'sunset' },
-  {
-    no: '02',
-    title: '窗边早餐',
-    copy: '好好吃饭，是给自己的拥抱。',
-    tone: 'morning',
-  },
-  { no: '03', title: '一场小雨', copy: '世界安静，我也安静。', tone: 'rain' },
-];
+import { DrawingEditor } from './DrawingEditor';
 interface Props {
   unlocked: boolean;
-  onDraw: () => void;
+  cards: RewardCard[];
+  history: { cardId: string; drawnAt: string }[];
+  onCards: (cards: RewardCard[]) => void;
+  onHistory: (items: { cardId: string; drawnAt: string }[]) => void;
   notify: (text: string) => void;
 }
-export function RewardsPage({ unlocked, onDraw, notify }: Props) {
+export function RewardsPage({
+  unlocked,
+  cards,
+  history,
+  onCards,
+  onHistory,
+  notify,
+}: Props) {
   const [tab, setTab] = useState<'sweet' | 'joy'>('sweet');
-  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [pending, setPending] = useState<RewardCard | null>(null);
+  const [flipped, setFlipped] = useState(false);
+  const [editing, setEditing] = useState<RewardCard | null>(null);
+  const undrawn = cards.filter(card => !card.drawnAt);
+  const collected = cards.filter(card => card.drawnAt);
+  const draw = () => {
+    if (!unlocked || !undrawn.length) return;
+    setPending(undrawn[Math.floor(Math.random() * undrawn.length)]);
+    setFlipped(false);
+  };
+  const collect = () => {
+    if (!pending) return;
+    const drawnAt = new Date().toISOString();
+    onCards(
+      cards.map(card => (card.id === pending.id ? { ...card, drawnAt } : card)),
+    );
+    onHistory([...history, { cardId: pending.id, drawnAt }]);
+    setPending(null);
+    notify('卡片已收入集合，可随时查看');
+  };
+  const shown = cards.filter(card => card.kind === tab);
   return (
     <>
       <section className="reward-title">
-        <span className="overline">TREASURE EVERY SECOND</span>
-        <h2>我珍惜秒秒的瞬间</h2>
-        <p>认真完成今天，也认真收藏今天。</p>
+        <span className="overline">A SMALL REWARD</span>
+        <h2>认真生活，也给自己一份奖励。</h2>
+        <p>抽中的卡会一直留在这里，不受之后任务状态影响。</p>
       </section>
       <section className={`draw-deck ${unlocked ? 'unlocked' : 'locked'}`}>
-        <div className="deck-cards">
+        <div className="deck-cards botanical">
           <i />
           <i />
-          <i>{!unlocked && <LockKeyhole size={22} />}</i>
+          <i>
+            <Cat />
+            <Flower2 />
+          </i>
         </div>
         <div>
-          <span>{unlocked ? 'TODAY IS READY' : 'TODAY · LOCKED'}</span>
+          <span>{unlocked ? 'A CHANCE IS READY' : 'KEEP GOING'}</span>
           <h3>
-            {unlocked ? '你把今天照顾得很好。' : '再完成一些，就能与惊喜见面。'}
+            {unlocked
+              ? '今天有一次与惊喜见面的机会。'
+              : '照顾好今天，卡背会为你亮起。'}
           </h3>
           <p>
-            {unlocked
-              ? '抽一张卡，留住此刻。'
-              : '完成大部分任务，并认真吃好三餐。'}
+            {undrawn.length
+              ? `卡池里还有 ${undrawn.length} 张未抽取卡面。`
+              : '这一组卡已经全部与你见面。'}
           </p>
-          <button disabled={!unlocked} onClick={onDraw}>
+          <button disabled={!unlocked || !undrawn.length} onClick={draw}>
             {unlocked ? (
               <>
                 <Sparkles size={14} />
@@ -58,7 +84,7 @@ export function RewardsPage({ unlocked, onDraw, notify }: Props) {
             ) : (
               <>
                 <LockKeyhole size={14} />
-                牌组暂未开放
+                机会尚未出现
               </>
             )}
           </button>
@@ -79,67 +105,129 @@ export function RewardsPage({ unlocked, onDraw, notify }: Props) {
             Chase Joys
           </button>
         </div>
-        {tab === 'sweet' ? (
-          <>
-            <div className="upload-tip">
-              <Camera size={15} />
-              <span>
-                <b>过去照片 + 手绘涂鸦</b>上传建议尺寸 750 × 1000px 竖版
-              </span>
-              <button onClick={() => notify('照片上传入口已打开')}>上传</button>
-            </div>
-            <div className="sweet-grid">
-              {sweetCards.map(card => (
-                <article className={`sweet-card ${card.tone}`} key={card.no}>
-                  <div className="abstract-photo">
-                    <span />
-                    <i />
-                    <b>⌁</b>
-                  </div>
-                  <small>NO.{card.no}</small>
-                  <h3>{card.title}</h3>
-                  <p>{card.copy}</p>
-                </article>
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="joy-list">
-            {joyCards.map((text, i) => (
-              <article key={text}>
-                <small>JOY · {String(i + 1).padStart(2, '0')}</small>
-                <p>{text}</p>
-                <span>现在就可以去做</span>
-              </article>
-            ))}
-          </div>
-        )}
+        <div className="reward-grid">
+          {shown.map(card => (
+            <article
+              className={`reward-card ${card.drawnAt ? '' : 'in-pool'}`}
+              key={card.id}
+            >
+              {card.image ? (
+                <img src={card.image} alt={card.title} />
+              ) : tab === 'sweet' ? (
+                <div className="photo-art">
+                  <span />
+                  <i />
+                </div>
+              ) : (
+                <div className="line-art-card">
+                  <Cat />
+                  <Flower2 />
+                </div>
+              )}
+              <small>
+                {card.drawnAt
+                  ? `获得于 ${card.drawnAt.slice(0, 10)}`
+                  : '仍在卡池'}
+              </small>
+              <h3>{card.drawnAt ? card.title : '等待相遇'}</h3>
+              <p>{card.drawnAt ? card.copy : '猫咪与花草守护着卡面。'}</p>
+              <button onClick={() => setEditing(card)}>
+                <Paintbrush size={12} />
+                编辑卡面
+              </button>
+            </article>
+          ))}
+        </div>
       </section>
-      <section className="life-section catalog-section">
+      <section className="life-section collected-section">
         <div className="section-heading">
           <div>
-            <h2>我的图鉴</h2>
-            <p>已收藏 3 张生活碎片</p>
+            <h2>已抽中的卡面</h2>
+            <p>{collected.length} 张 · 抽取日期会一直保留</p>
           </div>
-          <button
-            className="text-action"
-            onClick={() => setCatalogOpen(!catalogOpen)}
-          >
-            {catalogOpen ? '收起' : '展开'}
-            <ChevronDown size={13} />
-          </button>
         </div>
-        {catalogOpen && (
-          <div className="catalog-strip">
-            {sweetCards.map(c => (
-              <span key={c.no}>
-                NO.{c.no}
-                <b>{c.title}</b>
-              </span>
+        {collected.length ? (
+          <div className="collected-strip">
+            {collected.map(card => (
+              <button key={card.id} onClick={() => setEditing(card)}>
+                {card.image ? (
+                  <img src={card.image} alt="自定义卡面" />
+                ) : (
+                  <>
+                    <Cat />
+                    <b>{card.title}</b>
+                  </>
+                )}
+                <small>{card.drawnAt?.slice(0, 10)}</small>
+              </button>
             ))}
           </div>
+        ) : (
+          <p className="empty-copy">翻开第一张卡后，它会出现在这里。</p>
         )}
       </section>
+      {pending && (
+        <div className="modal-mask">
+          <dialog open className="modal-sheet reward-modal">
+            <button className="modal-close" onClick={() => setPending(null)}>
+              <X />
+            </button>
+            <p className="overline">TAP TO REVEAL</p>
+            <button
+              className={`flip-card ${flipped ? 'flipped' : ''}`}
+              onClick={() => setFlipped(true)}
+            >
+              {!flipped ? (
+                <div className="card-back">
+                  <Cat />
+                  <Flower2 />
+                  <span>轻点翻转</span>
+                </div>
+              ) : (
+                <div className="card-front">
+                  <small>
+                    {pending.kind === 'sweet' ? 'SWEET MOMENT' : 'CHASE JOY'}
+                  </small>
+                  <h2>{pending.title}</h2>
+                  <p>{pending.copy}</p>
+                </div>
+              )}
+            </button>
+            {flipped && (
+              <button className="primary-action" onClick={collect}>
+                收下这张卡
+              </button>
+            )}
+          </dialog>
+        </div>
+      )}
+      {editing && (
+        <div className="modal-mask">
+          <dialog open className="modal-sheet drawing-sheet">
+            <div className="modal-head">
+              <div>
+                <span>CARD STUDIO</span>
+                <h2>画一张自己的卡</h2>
+              </div>
+              <button onClick={() => setEditing(null)}>
+                <X />
+              </button>
+            </div>
+            <DrawingEditor
+              notify={notify}
+              onSave={image => {
+                onCards(
+                  cards.map(card =>
+                    card.id === editing.id ? { ...card, image } : card,
+                  ),
+                );
+                setEditing(null);
+                notify('新卡面已保存在此设备');
+              }}
+            />
+          </dialog>
+        </div>
+      )}
     </>
   );
 }

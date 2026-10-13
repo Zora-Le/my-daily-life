@@ -1,11 +1,13 @@
 import { DailyPage } from '@/components/life/DailyPage';
-import { TulipIcon } from '@/components/life/LineArt';
+import { BookIcon, TulipIcon } from '@/components/life/LineArt';
 import { MoneyPage } from '@/components/life/MoneyPage';
 import { ProgressPage } from '@/components/life/ProgressPage';
 import { RewardsPage } from '@/components/life/RewardsPage';
 import { SettingsPage } from '@/components/life/SettingsPage';
-import type { Task } from '@/components/life/WeekPlanner';
-import { CalendarDays, Gift, Settings, WalletCards, X } from 'lucide-react';
+import type { LifeTask } from '@/hooks/useLifeStore';
+import { emptyDay, useLifeStore } from '@/hooks/useLifeStore';
+import { TODAY, weekStart } from '@/lib/lifeUtils';
+import { CalendarDays, Settings, WalletCards, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 type PageKey = 'daily' | 'progress' | 'money' | 'rewards' | 'settings';
@@ -13,11 +15,8 @@ type TaskDraft = {
   title: string;
   start: string;
   end: string;
-  tone: Task['tone'];
+  tone: LifeTask['tone'];
 };
-const isoToIndex = (iso: string) =>
-  Math.max(0, Math.min(6, Number(iso.slice(-2)) - 12));
-
 function Modal({
   children,
   onClose,
@@ -34,77 +33,78 @@ function Modal({
     </div>
   );
 }
-
 export default function Page() {
+  const { state, update, updateDay, importState } = useLifeStore();
   const [page, setPage] = useState<PageKey>('daily');
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: 1,
-      title: '产品方案第二版',
-      start: 0,
-      end: 2,
-      done: false,
-      tone: 'rose',
-    },
-    { id: 2, title: '晨间阅读', start: 1, end: 1, done: true, tone: 'yellow' },
-    {
-      id: 3,
-      title: '英语听说练习',
-      start: 3,
-      end: 4,
-      done: true,
-      tone: 'blue',
-    },
-    { id: 4, title: '给朋友回信', start: 5, end: 5, done: false, tone: 'rose' },
-  ]);
+  const [date, setDate] = useState(TODAY);
+  const [week, setWeek] = useState(weekStart(TODAY));
   const [draft, setDraft] = useState<TaskDraft | null>(null);
-  const [mealDone, setMealDone] = useState(2);
   const [toast, setToast] = useState('');
-  const [drawOpen, setDrawOpen] = useState(false);
   const notify = (text: string) => {
     setToast(text);
-    window.setTimeout(() => setToast(''), 1900);
+    window.setTimeout(() => setToast(''), 2200);
   };
+  const day = state.days[date] ?? emptyDay();
   const title = useMemo(
     () =>
       ({
         daily: 'My Daily',
-        progress: '我的进步',
+        progress: '英语 my progress',
         money: '收入与支出',
-        rewards: '瞬间图鉴',
+        rewards: '奖励',
         settings: '设置',
       })[page],
     [page],
   );
-  const openTask = (start: string, end: string) =>
-    setDraft({ title: '', start, end, tone: 'blue' });
   const addTask = () => {
-    if (!draft?.title.trim()) {
-      notify('请先写下任务名称');
-      return;
-    }
-    setTasks([
-      ...tasks,
-      {
-        id: Date.now(),
-        title: draft.title.trim(),
-        start: isoToIndex(draft.start),
-        end: isoToIndex(draft.end),
-        done: false,
-        tone: draft.tone,
-      },
-    ]);
+    if (!draft?.title.trim()) return notify('请先写下任务名称');
+    const [start, end] =
+      draft.start <= draft.end
+        ? [draft.start, draft.end]
+        : [draft.end, draft.start];
+    update(current => ({
+      ...current,
+      tasks: [
+        ...current.tasks,
+        {
+          id: Date.now(),
+          title: draft.title.trim(),
+          start,
+          end,
+          done: false,
+          tone: draft.tone,
+        },
+      ],
+    }));
     setDraft(null);
-    notify('已放进这一周');
+    notify('任务已加入日历');
   };
+  const dayTasks = state.tasks.filter(
+    task => task.start <= date && task.end >= date,
+  );
   const unlocked =
-    tasks.filter(t => t.done).length >= Math.ceil(tasks.length * 0.6) &&
-    mealDone === 3;
+    dayTasks.length > 0 &&
+    dayTasks.filter(task => task.done).length >=
+      Math.ceil(dayTasks.length * 0.6) &&
+    Object.values(day.meals).every(meal => meal.text || meal.image);
+  const recordedDates = Object.keys(state.days)
+    .filter(key => {
+      const value = state.days[key];
+      return (
+        value.mood ||
+        value.exercise.cardio ||
+        value.exercise.strength ||
+        Object.values(value.meals).some(m => m.text || m.image) ||
+        Object.values(value.english).some(Boolean)
+      );
+    })
+    .sort()
+    .reverse();
   const nav: { key: PageKey; label: string; icon: React.ReactNode }[] = [
     { key: 'daily', label: '日常', icon: <CalendarDays /> },
-    { key: 'progress', label: '进步', icon: <TulipIcon /> },
+    { key: 'progress', label: '英语', icon: <BookIcon /> },
     { key: 'money', label: '收支', icon: <WalletCards /> },
-    { key: 'rewards', label: '珍藏', icon: <Gift /> },
+    { key: 'rewards', label: '奖励', icon: <TulipIcon /> },
   ];
   return (
     <main className="app-shell">
@@ -121,24 +121,70 @@ export default function Page() {
         <div className="content" key={page}>
           {page === 'daily' && (
             <DailyPage
-              tasks={tasks}
-              setTasks={setTasks}
-              openTask={openTask}
+              date={date}
+              week={week}
+              day={day}
+              recordedDates={recordedDates}
+              tasks={state.tasks}
+              phases={state.phases}
+              onDate={setDate}
+              onWeek={setWeek}
+              onDay={next => updateDay(date, () => next)}
+              onTasks={tasks => update(current => ({ ...current, tasks }))}
+              onPhase={(iso, phase) =>
+                update(current => ({
+                  ...current,
+                  phases: { ...current.phases, [iso]: phase },
+                }))
+              }
+              openTask={(start, end) =>
+                setDraft({ title: '', start, end, tone: 'blue' })
+              }
               notify={notify}
-              mealDone={mealDone}
-              setMealDone={setMealDone}
             />
           )}
-          {page === 'progress' && <ProgressPage notify={notify} />}
-          {page === 'money' && <MoneyPage notify={notify} />}
+          {page === 'progress' && (
+            <ProgressPage
+              date={date}
+              day={day}
+              books={state.books}
+              notes={state.notes}
+              onDay={next => updateDay(date, () => next)}
+              onBooks={books => update(current => ({ ...current, books }))}
+              onNotes={notes => update(current => ({ ...current, notes }))}
+              notify={notify}
+            />
+          )}
+          {page === 'money' && (
+            <MoneyPage
+              savings={state.savings}
+              onSavings={savings =>
+                update(current => ({ ...current, savings }))
+              }
+              notify={notify}
+            />
+          )}
           {page === 'rewards' && (
             <RewardsPage
               unlocked={unlocked}
-              onDraw={() => setDrawOpen(true)}
+              cards={state.rewardCards}
+              history={state.drawHistory}
+              onCards={rewardCards =>
+                update(current => ({ ...current, rewardCards }))
+              }
+              onHistory={drawHistory =>
+                update(current => ({ ...current, drawHistory }))
+              }
               notify={notify}
             />
           )}
-          {page === 'settings' && <SettingsPage notify={notify} />}
+          {page === 'settings' && (
+            <SettingsPage
+              state={state}
+              onImport={importState}
+              notify={notify}
+            />
+          )}
         </div>
         <nav className="bottom-nav" aria-label="主导航">
           {nav.map(item => (
@@ -162,7 +208,7 @@ export default function Page() {
                 {draft.start === draft.end ? '添加单日任务' : '添加连续任务'}
               </h2>
             </div>
-            <button onClick={() => setDraft(null)} aria-label="关闭">
+            <button onClick={() => setDraft(null)}>
               <X size={18} />
             </button>
           </div>
@@ -199,41 +245,12 @@ export default function Page() {
                 key={tone}
                 className={`${tone} ${draft.tone === tone ? 'active' : ''}`}
                 onClick={() => setDraft({ ...draft, tone })}
-                aria-label={`选择${tone}色`}
               />
             ))}
           </div>
           <button className="primary-action" onClick={addTask}>
-            添加到这一周
+            保存任务
           </button>
-        </Modal>
-      )}
-      {drawOpen && (
-        <Modal onClose={() => setDrawOpen(false)}>
-          <div className="draw-result">
-            <span>YOU FOUND A MOMENT</span>
-            <div className="drawn-card">
-              <small>NO.04 · SWEET MOMENTS</small>
-              <i />
-              <b>
-                今天的晚风
-                <br />
-                也记得你
-              </b>
-              <em>好好生活，本身就是礼物。</em>
-            </div>
-            <h2>「晚风来信」</h2>
-            <p>这张卡已经放进你的图鉴。</p>
-            <button
-              className="primary-action"
-              onClick={() => {
-                setDrawOpen(false);
-                notify('瞬间已珍藏');
-              }}
-            >
-              收下卡片
-            </button>
-          </div>
         </Modal>
       )}
       {toast && <div className="toast">{toast}</div>}
