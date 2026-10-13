@@ -1,0 +1,8 @@
+{
+    "app_name": "my-daily-my-life-ui",
+    "app_description": "温柔克制的手机端个人生活记录高保真 React 原型",
+    "capabilities": [
+        "access_control"
+    ],
+    "datasources": {}
+}
