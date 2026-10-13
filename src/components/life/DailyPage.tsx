@@ -1,7 +1,7 @@
 import type { DayRecord, LifeTask, Meal } from '@/hooks/useLifeStore';
 import { TODAY, compressImage, formatShort, weekStart } from '@/lib/lifeUtils';
-import { Camera, Crown, Flower2, History, RotateCcw, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { Camera, Crown, Flame, Flower2, RotateCcw, X } from 'lucide-react';
+import { useRef } from 'react';
 import type { Phase } from './LineArt';
 import { SportIcon } from './LineArt';
 import { WeekPlanner } from './WeekPlanner';
@@ -22,7 +22,6 @@ interface Props {
   date: string;
   week: string;
   day: DayRecord;
-  recordedDates: string[];
   tasks: LifeTask[];
   phases: Record<string, Phase>;
   onDate: (date: string) => void;
@@ -38,7 +37,6 @@ export function DailyPage(props: Props) {
     date,
     week,
     day,
-    recordedDates,
     tasks,
     phases,
     onDate,
@@ -49,7 +47,6 @@ export function DailyPage(props: Props) {
     openTask,
     notify,
   } = props;
-  const [historyOpen, setHistoryOpen] = useState(false);
   const uploads = useRef<Record<string, HTMLInputElement | null>>({});
   const setMeal = (key: keyof DayRecord['meals'], patch: Partial<Meal>) =>
     onDay({
@@ -62,13 +59,6 @@ export function DailyPage(props: Props) {
   };
   return (
     <>
-      <div className="save-banner">
-        <span>✓ 已自动保存在此设备</span>
-        <button onClick={() => setHistoryOpen(!historyOpen)}>
-          <History size={13} />
-          历史 / 回顾
-        </button>
-      </div>
       <div className="date-toolbar">
         <label>
           <span>正在记录</span>
@@ -85,26 +75,6 @@ export function DailyPage(props: Props) {
           </button>
         )}
       </div>
-      {historyOpen && (
-        <div className="history-panel">
-          <b>最近有记录</b>
-          {recordedDates.length ? (
-            recordedDates.slice(0, 8).map(item => (
-              <button
-                key={item}
-                onClick={() => {
-                  selectDate(item);
-                  setHistoryOpen(false);
-                }}
-              >
-                {formatShort(item)}
-              </button>
-            ))
-          ) : (
-            <small>还没有更早的记录</small>
-          )}
-        </div>
-      )}
       <WeekPlanner
         tasks={tasks}
         week={week}
@@ -120,7 +90,7 @@ export function DailyPage(props: Props) {
         <div className="section-heading">
           <div>
             <h2>daily diet</h2>
-            <p>{formatShort(date)} · 写下三餐，也可以留一张小图</p>
+            <p>{formatShort(date)}</p>
           </div>
         </div>
         <div className="meal-row">
@@ -210,7 +180,7 @@ export function DailyPage(props: Props) {
               <span className="sport-copy">
                 <b>{key === 'cardio' ? '有氧 · 游泳' : '无氧 · 力量'}</b>
               </span>
-              <strong>{day.exercise[key] ? '已做过' : '轻点打卡'}</strong>
+              <strong>{day.exercise[key] ? '已完成' : '待完成'}</strong>
             </button>
           ))}
         </div>
@@ -236,13 +206,22 @@ export function DailyPage(props: Props) {
                     <Crown className="mood-crown" />
                   )}
                   {selected && item.tone === 'happy' && (
-                    <Flower2 className="mood-flower" />
+                    <span className="mood-flowers">
+                      <Flower2 />
+                      <Flower2 />
+                      <Flower2 />
+                      <Flower2 />
+                    </span>
                   )}
                   {selected && item.tone === 'tired' && (
-                    <em className="mood-zzz">zzz</em>
+                    <span className="mood-zzz">
+                      <i>z</i>
+                      <i>z</i>
+                      <i>z</i>
+                    </span>
                   )}
                   {selected && item.tone === 'angry' && (
-                    <em className="mood-fire">♨♨♨</em>
+                    <Flame className="mood-fire" fill="currentColor" />
                   )}
                 </span>
                 <small>{item.name}</small>

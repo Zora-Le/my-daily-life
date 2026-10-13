@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { DrawingEditor } from './DrawingEditor';
+
 interface Props {
   unlocked: boolean;
   cards: RewardCard[];
@@ -30,13 +31,13 @@ export function RewardsPage({
   const [flipped, setFlipped] = useState(false);
   const [editing, setEditing] = useState<RewardCard | null>(null);
   const undrawn = cards.filter(card => !card.drawnAt);
-  const collected = cards.filter(card => card.drawnAt);
+  const drawn = cards.filter(card => card.drawnAt);
   const draw = () => {
     if (!unlocked || !undrawn.length) return;
     setPending(undrawn[Math.floor(Math.random() * undrawn.length)]);
     setFlipped(false);
   };
-  const collect = () => {
+  const keepCard = () => {
     if (!pending) return;
     const drawnAt = new Date().toISOString();
     onCards(
@@ -44,15 +45,13 @@ export function RewardsPage({
     );
     onHistory([...history, { cardId: pending.id, drawnAt }]);
     setPending(null);
-    notify('卡片已收入集合，可随时查看');
+    notify('卡片已永久保留');
   };
-  const shown = cards.filter(card => card.kind === tab);
   return (
     <>
       <section className="reward-title">
         <span className="overline">A SMALL REWARD</span>
         <h2>认真生活，也给自己一份奖励。</h2>
-        <p>抽中的卡会一直留在这里，不受之后任务状态影响。</p>
       </section>
       <section className={`draw-deck ${unlocked ? 'unlocked' : 'locked'}`}>
         <div className="deck-cards botanical">
@@ -64,17 +63,9 @@ export function RewardsPage({
           </i>
         </div>
         <div>
-          <span>{unlocked ? 'A CHANCE IS READY' : 'KEEP GOING'}</span>
-          <h3>
-            {unlocked
-              ? '今天有一次与惊喜见面的机会。'
-              : '照顾好今天，卡背会为你亮起。'}
-          </h3>
-          <p>
-            {undrawn.length
-              ? `卡池里还有 ${undrawn.length} 张未抽取卡面。`
-              : '这一组卡已经全部与你见面。'}
-          </p>
+          <span>每日抽卡机会</span>
+          <h3>{unlocked ? '今日惊喜已点亮' : '今日机会未点亮'}</h3>
+          <b className="pool-count">卡池 {undrawn.length}</b>
           <button disabled={!unlocked || !undrawn.length} onClick={draw}>
             {unlocked ? (
               <>
@@ -84,11 +75,25 @@ export function RewardsPage({
             ) : (
               <>
                 <LockKeyhole size={14} />
-                机会尚未出现
+                未解锁
               </>
             )}
           </button>
         </div>
+        {drawn.length > 0 && (
+          <div className="drawn-stack">
+            {drawn.map((card, index) => (
+              <button
+                key={card.id}
+                style={{ '--card-order': index } as React.CSSProperties}
+                onClick={() => setEditing(card)}
+              >
+                <small>{card.drawnAt?.slice(0, 10)}</small>
+                <b>{card.title}</b>
+              </button>
+            ))}
+          </div>
+        )}
       </section>
       <section className="life-section">
         <div className="card-tabs">
@@ -106,65 +111,32 @@ export function RewardsPage({
           </button>
         </div>
         <div className="reward-grid">
-          {shown.map(card => (
-            <article
-              className={`reward-card ${card.drawnAt ? '' : 'in-pool'}`}
-              key={card.id}
-            >
-              {card.image ? (
-                <img src={card.image} alt={card.title} />
-              ) : tab === 'sweet' ? (
-                <div className="photo-art">
-                  <span />
-                  <i />
-                </div>
-              ) : (
-                <div className="line-art-card">
-                  <Cat />
-                  <Flower2 />
-                </div>
-              )}
-              <small>
-                {card.drawnAt
-                  ? `获得于 ${card.drawnAt.slice(0, 10)}`
-                  : '仍在卡池'}
-              </small>
-              <h3>{card.drawnAt ? card.title : '等待相遇'}</h3>
-              <p>{card.drawnAt ? card.copy : '猫咪与花草守护着卡面。'}</p>
-              <button onClick={() => setEditing(card)}>
-                <Paintbrush size={12} />
-                编辑卡面
-              </button>
-            </article>
-          ))}
-        </div>
-      </section>
-      <section className="life-section collected-section">
-        <div className="section-heading">
-          <div>
-            <h2>已抽中的卡面</h2>
-            <p>{collected.length} 张 · 抽取日期会一直保留</p>
-          </div>
-        </div>
-        {collected.length ? (
-          <div className="collected-strip">
-            {collected.map(card => (
-              <button key={card.id} onClick={() => setEditing(card)}>
+          {undrawn
+            .filter(card => card.kind === tab)
+            .map(card => (
+              <article className="reward-card in-pool" key={card.id}>
                 {card.image ? (
-                  <img src={card.image} alt="自定义卡面" />
+                  <img src={card.image} alt={card.title} />
+                ) : tab === 'sweet' ? (
+                  <div className="photo-art">
+                    <span />
+                    <i />
+                  </div>
                 ) : (
-                  <>
+                  <div className="line-art-card">
                     <Cat />
-                    <b>{card.title}</b>
-                  </>
+                    <Flower2 />
+                  </div>
                 )}
-                <small>{card.drawnAt?.slice(0, 10)}</small>
-              </button>
+                <small>仍在卡池</small>
+                <h3>等待相遇</h3>
+                <button onClick={() => setEditing(card)}>
+                  <Paintbrush size={12} />
+                  编辑卡面
+                </button>
+              </article>
             ))}
-          </div>
-        ) : (
-          <p className="empty-copy">翻开第一张卡后，它会出现在这里。</p>
-        )}
+        </div>
       </section>
       {pending && (
         <div className="modal-mask">
@@ -172,7 +144,7 @@ export function RewardsPage({
             <button className="modal-close" onClick={() => setPending(null)}>
               <X />
             </button>
-            <p className="overline">TAP TO REVEAL</p>
+            <p className="overline">TODAY'S CARD</p>
             <button
               className={`flip-card ${flipped ? 'flipped' : ''}`}
               onClick={() => setFlipped(true)}
@@ -181,7 +153,7 @@ export function RewardsPage({
                 <div className="card-back">
                   <Cat />
                   <Flower2 />
-                  <span>轻点翻转</span>
+                  <span>待揭晓</span>
                 </div>
               ) : (
                 <div className="card-front">
@@ -194,7 +166,7 @@ export function RewardsPage({
               )}
             </button>
             {flipped && (
-              <button className="primary-action" onClick={collect}>
+              <button className="primary-action" onClick={keepCard}>
                 收下这张卡
               </button>
             )}
@@ -207,7 +179,7 @@ export function RewardsPage({
             <div className="modal-head">
               <div>
                 <span>CARD STUDIO</span>
-                <h2>画一张自己的卡</h2>
+                <h2>我的卡面</h2>
               </div>
               <button onClick={() => setEditing(null)}>
                 <X />
@@ -222,7 +194,7 @@ export function RewardsPage({
                   ),
                 );
                 setEditing(null);
-                notify('新卡面已保存在此设备');
+                notify('卡面已保存');
               }}
             />
           </dialog>

@@ -49,7 +49,7 @@ export default function Page() {
     () =>
       ({
         daily: 'My Daily',
-        progress: '英语 my progress',
+        progress: '我的进步 my progress',
         money: '收入与支出',
         rewards: '奖励',
         settings: '设置',
@@ -87,22 +87,9 @@ export default function Page() {
     dayTasks.filter(task => task.done).length >=
       Math.ceil(dayTasks.length * 0.6) &&
     Object.values(day.meals).every(meal => meal.text || meal.image);
-  const recordedDates = Object.keys(state.days)
-    .filter(key => {
-      const value = state.days[key];
-      return (
-        value.mood ||
-        value.exercise.cardio ||
-        value.exercise.strength ||
-        Object.values(value.meals).some(m => m.text || m.image) ||
-        Object.values(value.english).some(Boolean)
-      );
-    })
-    .sort()
-    .reverse();
   const nav: { key: PageKey; label: string; icon: React.ReactNode }[] = [
     { key: 'daily', label: '日常', icon: <CalendarDays /> },
-    { key: 'progress', label: '英语', icon: <BookIcon /> },
+    { key: 'progress', label: '进步', icon: <BookIcon /> },
     { key: 'money', label: '收支', icon: <WalletCards /> },
     { key: 'rewards', label: '奖励', icon: <TulipIcon /> },
   ];
@@ -124,7 +111,6 @@ export default function Page() {
               date={date}
               week={week}
               day={day}
-              recordedDates={recordedDates}
               tasks={state.tasks}
               phases={state.phases}
               onDate={setDate}
@@ -158,6 +144,10 @@ export default function Page() {
           {page === 'money' && (
             <MoneyPage
               savings={state.savings}
+              monthlyMoney={state.monthlyMoney}
+              onMonthlyMoney={monthlyMoney =>
+                update(current => ({ ...current, monthlyMoney }))
+              }
               onSavings={savings =>
                 update(current => ({ ...current, savings }))
               }

@@ -1,5 +1,6 @@
-import type { LifeState } from '@/hooks/useLifeStore';
+import type { LifeState, MonthlyMoney } from '@/hooks/useLifeStore';
 import { safeCalculate } from '@/lib/lifeUtils';
+import { X } from 'lucide-react';
 import { useState } from 'react';
 import {
   Bar,
@@ -10,35 +11,77 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-const data = [
-  { month: '5月', income: 15.2, expense: 9.1 },
-  { month: '6月', income: 16.8, expense: 10.6 },
-  { month: '7月', income: 16.1, expense: 8.8 },
-  { month: '8月', income: 18.4, expense: 11.2 },
-  { month: '9月', income: 17.6, expense: 9.4 },
-  { month: '10月', income: 19.3, expense: 9.8 },
-];
+
 type Saving = LifeState['savings'][number];
 export function MoneyPage({
   savings,
+  monthlyMoney,
   onSavings,
+  onMonthlyMoney,
   notify,
 }: {
   savings: Saving[];
+  monthlyMoney: MonthlyMoney[];
   onSavings: (items: Saving[]) => void;
+  onMonthlyMoney: (items: MonthlyMoney[]) => void;
   notify: (text: string) => void;
 }) {
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
-  const commit = (item: Saving) => {
+  const [moneyEditor, setMoneyEditor] = useState(false);
+  const matchedIndex = monthlyMoney.findIndex(
+    item => item.month === `${new Date().getMonth() + 1}月`,
+  );
+  const resolvedIndex =
+    matchedIndex >= 0 ? matchedIndex : monthlyMoney.length - 1;
+  const current = monthlyMoney[resolvedIndex];
+  const [incomeDraft, setIncomeDraft] = useState('');
+  const [expenseDraft, setExpenseDraft] = useState('');
+  const chartData = monthlyMoney.map(item => ({
+    ...item,
+    income: item.income / 1000,
+    expense: item.expense / 1000,
+  }));
+  const commitSaving = (item: Saving) => {
     try {
       const value = safeCalculate(draft);
       onSavings(
-        savings.map(s =>
-          s.id === item.id ? { ...s, expression: draft, value } : s,
+        savings.map(saving =>
+          saving.id === item.id
+            ? { ...saving, expression: draft, value }
+            : saving,
         ),
       );
       setEditing(null);
+    } catch (error) {
+      notify((error as Error).message);
+    }
+  };
+  const openMoneyEditor = () => {
+    setIncomeDraft(String(current.income));
+    setExpenseDraft(String(current.expense));
+    setMoneyEditor(true);
+  };
+  const parseAmount = (value: string, label: string) => {
+    const normalized = value.trim().replace(/,/g, '');
+    if (!normalized) throw new Error(`${label}不能为空`);
+    if (!/^\d+(\.\d{1,2})?$/.test(normalized))
+      throw new Error(`${label}格式不正确`);
+    const amount = Number(normalized);
+    if (!Number.isFinite(amount) || amount < 0)
+      throw new Error(`${label}不能为负数`);
+    return amount;
+  };
+  const saveMoney = () => {
+    try {
+      const income = parseAmount(incomeDraft, '收入');
+      const expense = parseAmount(expenseDraft, '支出');
+      onMonthlyMoney(
+        monthlyMoney.map((item, index) =>
+          index === resolvedIndex ? { ...item, income, expense } : item,
+        ),
+      );
+      setMoneyEditor(false);
     } catch (error) {
       notify((error as Error).message);
     }
@@ -52,14 +95,13 @@ export function MoneyPage({
             <span className="overline">PLATFORM SAVINGS</span>
             <h2>平台储蓄</h2>
           </div>
-          <small>点击岛屿直接计算</small>
         </div>
         <div className="island-map">
           <div className="wave wave-one" />
           <div className="wave wave-two" />
-          {savings.map((item, i) => (
+          {savings.map((item, index) => (
             <article
-              className={`paper-island island-${['one', 'two', 'three'][i]}`}
+              className={`paper-island island-${['one', 'two', 'three'][index]}`}
               key={item.id}
               onClick={() => {
                 setEditing(item.id);
@@ -70,10 +112,12 @@ export function MoneyPage({
                 <input
                   value={draft}
                   inputMode="decimal"
-                  onChange={e => setDraft(e.target.value)}
-                  onBlur={() => commit(item)}
-                  onKeyDown={e => e.key === 'Enter' && e.currentTarget.blur()}
-                  onClick={e => e.stopPropagation()}
+                  onChange={event => setDraft(event.target.value)}
+                  onBlur={() => commitSaving(item)}
+                  onKeyDown={event =>
+                    event.key === 'Enter' && event.currentTarget.blur()
+                  }
+                  onClick={event => event.stopPropagation()}
                 />
               ) : (
                 <b>¥ {item.value.toLocaleString()}</b>
@@ -85,13 +129,12 @@ export function MoneyPage({
         <p className="savings-total">
           总储蓄 <strong>{total.toLocaleString()}</strong> 元
         </p>
-        <p className="expression-tip">支持 =1239+1349+16700、括号与四则运算</p>
       </section>
       <section className="life-section">
         <div className="section-heading">
           <div>
             <h2>月度收支</h2>
-            <p>最近六个月 · 单位：千元</p>
+            <p>单位：千元</p>
           </div>
           <span className="bar-legend">
             <i />
@@ -103,7 +146,7 @@ export function MoneyPage({
         <div className="money-chart">
           <ResponsiveContainer width="100%" height={230}>
             <BarChart
-              data={data}
+              data={chartData}
               barGap={4}
               margin={{ top: 10, right: 4, left: -24, bottom: 0 }}
             >
@@ -121,7 +164,7 @@ export function MoneyPage({
               />
               <Tooltip
                 cursor={{ fill: '#f6f3ed' }}
-                formatter={v => `¥${Number(v).toFixed(1)}k`}
+                formatter={value => `¥${Number(value).toFixed(1)}k`}
                 contentStyle={{
                   border: '1px solid #ddd8cf',
                   borderRadius: 12,
@@ -146,16 +189,56 @@ export function MoneyPage({
           </ResponsiveContainer>
         </div>
       </section>
-      <section className="money-footnote">
-        <span>OCTOBER</span>
+      <button className="money-footnote" onClick={openMoneyEditor}>
+        <span>{current.month}</span>
         <p>
-          <b>19,300</b> 元收入
+          <b>{current.income.toLocaleString()}</b> 元收入
         </p>
         <i />
         <p>
-          <b>9,800</b> 元支出
+          <b>{current.expense.toLocaleString()}</b> 元支出
         </p>
-      </section>
+      </button>
+      {moneyEditor && (
+        <div className="modal-mask" onPointerDown={() => setMoneyEditor(false)}>
+          <div
+            className="modal-sheet money-editor"
+            onPointerDown={event => event.stopPropagation()}
+          >
+            <div className="modal-head">
+              <div>
+                <span>{current.month}</span>
+                <h2>编辑月度收支</h2>
+              </div>
+              <button onClick={() => setMoneyEditor(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <label>
+              本月收入
+              <input
+                inputMode="decimal"
+                value={incomeDraft}
+                onChange={event => setIncomeDraft(event.target.value)}
+              />
+            </label>
+            <label>
+              本月支出
+              <input
+                inputMode="decimal"
+                value={expenseDraft}
+                onChange={event => setExpenseDraft(event.target.value)}
+              />
+            </label>
+            <div className="money-actions">
+              <button onClick={() => setMoneyEditor(false)}>取消</button>
+              <button className="primary-action" onClick={saveMoney}>
+                确认
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
