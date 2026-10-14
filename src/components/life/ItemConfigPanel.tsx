@@ -1,6 +1,7 @@
 import type { ConfigItem } from '@/hooks/useLifeStore';
 import { Archive, Plus, RotateCcw, Save, X } from 'lucide-react';
 import { useState } from 'react';
+import { ConfirmModal } from './ConfirmModal';
 import { LifeIcon, lifeIconIds } from './LifeIcon';
 
 interface Props {
@@ -23,6 +24,7 @@ const tones: NonNullable<ConfigItem['tone']>[] = [
 
 export function ItemConfigPanel({ title, items, onChange, notify }: Props) {
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [pendingArchive, setPendingArchive] = useState<ConfigItem | null>(null);
   const active = items.filter(item => !item.archivedAt);
   const archived = items.filter(item => item.archivedAt);
   const save = () => {
@@ -50,15 +52,16 @@ export function ItemConfigPanel({ title, items, onChange, notify }: Props) {
     }
     setDraft(null);
   };
-  const archive = (item: ConfigItem) => {
-    if (!window.confirm(`归档“${item.name}”？历史打卡会继续保留。`)) return;
+  const archive = () => {
+    if (!pendingArchive) return;
     onChange(
       items.map(value =>
-        value.id === item.id
+        value.id === pendingArchive.id
           ? { ...value, archivedAt: new Date().toISOString() }
           : value,
       ),
     );
+    setPendingArchive(null);
   };
   const restore = (id: string) =>
     onChange(
@@ -101,7 +104,7 @@ export function ItemConfigPanel({ title, items, onChange, notify }: Props) {
             </button>
             <button
               className="config-archive"
-              onClick={() => archive(item)}
+              onClick={() => setPendingArchive(item)}
               aria-label={`归档${item.name}`}
             >
               <Archive size={14} />
@@ -184,6 +187,14 @@ export function ItemConfigPanel({ title, items, onChange, notify }: Props) {
           </button>
         </div>
       )}
+      <ConfirmModal
+        open={pendingArchive !== null}
+        title="归档项目"
+        message={`归档“${pendingArchive?.name ?? ''}”后，历史打卡会继续保留。`}
+        confirmLabel="归档"
+        onCancel={() => setPendingArchive(null)}
+        onConfirm={archive}
+      />
     </section>
   );
 }

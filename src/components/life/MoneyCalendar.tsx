@@ -7,6 +7,7 @@ import {
 } from '@/lib/lifeRules';
 import { Check, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { ConfirmModal } from './ConfirmModal';
 
 interface Props {
   transactions: MoneyTransaction[];
@@ -29,6 +30,7 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
   const [kind, setKind] = useState<'income' | 'expense'>('expense');
   const [amount, setAmount] = useState('');
   const [detail, setDetail] = useState('');
+  const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
   const byDay = useMemo(() => {
     const map = new Map<string, MoneyTransaction[]>();
     for (const item of transactions)
@@ -44,9 +46,10 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
     setSelected(`${value}-01`);
   };
   const selectedItems = byDay.get(selected) ?? [];
-  const remove = (id: number) => {
-    if (window.confirm('删除这条收支明细？'))
-      onChange(transactions.filter(item => item.id !== id));
+  const remove = () => {
+    if (pendingRemoval === null) return;
+    onChange(transactions.filter(item => item.id !== pendingRemoval));
+    setPendingRemoval(null);
   };
   const submit = () => {
     try {
@@ -128,7 +131,7 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
                 {formatCents(item.amountCents)}
               </strong>
               <button
-                onClick={() => remove(item.id)}
+                onClick={() => setPendingRemoval(item.id)}
                 aria-label={`删除${item.detail}`}
               >
                 <Trash2 size={14} />
@@ -180,6 +183,14 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
           <small>新增记录将保存到 {selected}</small>
         </div>
       </div>
+      <ConfirmModal
+        open={pendingRemoval !== null}
+        title="删除记账明细"
+        message="删除后无法恢复，确定移除这条收支明细吗？"
+        confirmLabel="删除"
+        onCancel={() => setPendingRemoval(null)}
+        onConfirm={remove}
+      />
     </section>
   );
 }

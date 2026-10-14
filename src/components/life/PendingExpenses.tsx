@@ -2,6 +2,7 @@ import type { PendingExpense } from '@/hooks/useLifeStore';
 import { formatCents, parseMoneyToCents } from '@/lib/lifeRules';
 import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { ConfirmModal } from './ConfirmModal';
 
 interface Props {
   items: PendingExpense[];
@@ -12,6 +13,7 @@ interface Props {
 export function PendingExpenses({ items, onChange, notify }: Props) {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
+  const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
   const add = () => {
     try {
       if (!name.trim()) throw new Error('请填写待支出名称');
@@ -29,9 +31,10 @@ export function PendingExpenses({ items, onChange, notify }: Props) {
       notify((error as Error).message);
     }
   };
-  const remove = (id: number) => {
-    if (window.confirm('删除这项待支出？'))
-      onChange(items.filter(item => item.id !== id));
+  const remove = () => {
+    if (pendingRemoval === null) return;
+    onChange(items.filter(item => item.id !== pendingRemoval));
+    setPendingRemoval(null);
   };
   return (
     <section className="pending-expenses">
@@ -65,7 +68,7 @@ export function PendingExpenses({ items, onChange, notify }: Props) {
             <span>{item.name}</span>
             <b>¥{formatCents(item.amountCents)}</b>
             <button
-              onClick={() => remove(item.id)}
+              onClick={() => setPendingRemoval(item.id)}
               aria-label={`删除${item.name}`}
             >
               <Trash2 size={13} />
@@ -73,6 +76,14 @@ export function PendingExpenses({ items, onChange, notify }: Props) {
           </div>
         ))}
       </div>
+      <ConfirmModal
+        open={pendingRemoval !== null}
+        title="删除待支出"
+        message="确定删除这项待支出吗？"
+        confirmLabel="删除"
+        onCancel={() => setPendingRemoval(null)}
+        onConfirm={remove}
+      />
     </section>
   );
 }

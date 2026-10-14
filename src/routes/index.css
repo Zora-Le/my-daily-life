@@ -3585,34 +3585,6 @@ svg {
   box-shadow: 0 2px 8px rgba(74, 65, 57, 0.08);
   color: #5d6662;
 }
-.money-month-total {
-  margin-top: 12px;
-  padding: 12px 14px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  border-radius: 14px;
-  background: #f4f1eb;
-}
-.money-month-total > span {
-  color: #8b9390;
-  font-size: 8px;
-  letter-spacing: 1px;
-}
-.money-month-total p {
-  margin: 0;
-  font-size: 9px;
-}
-.money-month-total p b {
-  font-family: var(--serif);
-  font-size: 13px;
-  font-weight: 400;
-}
-.money-month-total i {
-  width: 1px;
-  height: 20px;
-  background: #d8d4cc;
-}
 .money-calendar-section {
   margin-top: 30px;
 }
@@ -4328,8 +4300,6 @@ svg {
   font-size: 9px;
 }
 .paper-island span,
-.money-month-total > span,
-.money-month-total p,
 .settings-list small {
   color: #747871;
 }
@@ -4471,5 +4441,79 @@ svg {
   }
   .island-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* App-level confirmation dialog */
+.confirm-modal-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(48, 51, 48, 0.38);
+  backdrop-filter: blur(3px);
+}
+.confirm-modal {
+  width: min(100%, 330px);
+  padding: 24px 22px 20px;
+  border: 1px solid rgba(119, 126, 120, 0.18);
+  border-radius: 24px;
+  background: #fbfaf5;
+  box-shadow: 0 18px 50px rgba(54, 58, 54, 0.2);
+  text-align: center;
+  animation: confirm-in .2s ease-out;
+}
+.confirm-modal-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 13px;
+  border-radius: 50%;
+  background: #eee4df;
+  color: #9a6f68;
+}
+.confirm-modal h2 {
+  margin: 0;
+  color: #505753;
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 600;
+}
+.confirm-modal p {
+  margin: 9px 0 20px;
+  color: #7d827e;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.confirm-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.confirm-modal-actions button {
+  height: 40px;
+  border: 1px solid #d8d8d0;
+  border-radius: 13px;
+  background: #f3f2ec;
+  color: #69716d;
+  font-size: 12px;
+  font-weight: 500;
+}
+.confirm-modal-actions button.danger {
+  border-color: #c9aaa3;
+  background: #c49a91;
+  color: #fffdf9;
+}
+.confirm-modal-actions button:focus-visible {
+  outline: 2px solid #85978f;
+  outline-offset: 2px;
+}
+@keyframes confirm-in {
+  from {
+    transform: translateY(8px) scale(.98);
+    opacity: 0;
   }
 }

@@ -6,10 +6,8 @@ import type {
 import {
   createSavingsIsland,
   deleteSavingsIsland,
-  formatCents,
   monthlyTransactionSummary,
   renameSavingsIsland,
-  summarizeTransactions,
 } from '@/lib/lifeRules';
 import { safeCalculate } from '@/lib/lifeUtils';
 import { Plus } from 'lucide-react';
@@ -76,15 +74,11 @@ export function MoneyPage({
     setEditingName(id);
   };
   const total = savings.reduce((sum, item) => sum + item.value, 0);
-  const currentMonth = new Date().toISOString().slice(0, 7);
   const visibleChart = monthlyTransactionSummary(transactions).map(item => ({
     label: `${Number(item.month.slice(5))}月`,
     income: item.income / 100,
     expense: item.expense / 100,
   }));
-  const currentTotals = summarizeTransactions(
-    transactions.filter(item => item.date.startsWith(currentMonth)),
-  );
   return (
     <>
       <section className="savings-card narrow">
@@ -203,16 +197,6 @@ export function MoneyPage({
               />
             </BarChart>
           </ResponsiveContainer>
-        </div>
-        <div className="money-month-total">
-          <span>{Number(currentMonth.slice(5))} 月</span>
-          <p>
-            <b>{formatCents(currentTotals.income)}</b> 元收入
-          </p>
-          <i />
-          <p>
-            <b>{formatCents(currentTotals.expense)}</b> 元支出
-          </p>
         </div>
       </section>
 

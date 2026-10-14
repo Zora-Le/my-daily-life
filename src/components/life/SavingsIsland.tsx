@@ -1,6 +1,7 @@
 import type { SavingsIsland as SavingsIslandData } from '@/hooks/lifeSchema';
 import { Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { ConfirmModal } from './ConfirmModal';
 
 interface Props {
   item: SavingsIslandData;
@@ -24,6 +25,7 @@ export function SavingsIsland({
   const [nameDraft, setNameDraft] = useState(item.displayName);
   const [editingAmount, setEditingAmount] = useState(false);
   const [amountDraft, setAmountDraft] = useState(item.expression);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const nameInput = useRef<HTMLInputElement>(null);
   const amountInput = useRef<HTMLInputElement>(null);
 
@@ -34,9 +36,8 @@ export function SavingsIsland({
     if (editingAmount) amountInput.current?.focus();
   }, [editingAmount]);
   const confirmDelete = () => {
-    if (window.confirm(`删除“${item.displayName}”？金额记录将一并移除。`)) {
-      onDelete();
-    }
+    onDelete();
+    setConfirmingDelete(false);
   };
   const saveName = () => {
     const value = nameDraft.trim();
@@ -122,12 +123,20 @@ export function SavingsIsland({
           title="删除岛屿"
           onClick={event => {
             event.stopPropagation();
-            confirmDelete();
+            setConfirmingDelete(true);
           }}
         >
           <Trash2 size={12} />
         </button>
       )}
+      <ConfirmModal
+        open={confirmingDelete}
+        title="删除储蓄岛屿"
+        message={`删除“${item.displayName}”后，金额记录也会一并移除。`}
+        confirmLabel="删除"
+        onCancel={() => setConfirmingDelete(false)}
+        onConfirm={confirmDelete}
+      />
     </article>
   );
 }

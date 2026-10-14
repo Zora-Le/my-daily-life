@@ -1,6 +1,7 @@
 import { compressImage } from '@/lib/lifeUtils';
 import { Camera, Plus, X } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { ConfirmModal } from './ConfirmModal';
 
 const MAX_IMAGES = 5;
 const MAX_SOURCE_BYTES = 8 * 1024 * 1024;
@@ -17,6 +18,7 @@ interface Props {
 export function MealGallery({ label, images, onChange, notify }: Props) {
   const upload = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
   const addImages = async (files: FileList | null) => {
     if (!files?.length) return;
     try {
@@ -43,10 +45,10 @@ export function MealGallery({ label, images, onChange, notify }: Props) {
       if (upload.current) upload.current.value = '';
     }
   };
-  const remove = (index: number) => {
-    if (window.confirm('删除这张饮食图片？')) {
-      onChange(images.filter((_, itemIndex) => itemIndex !== index));
-    }
+  const remove = () => {
+    if (pendingRemoval === null) return;
+    onChange(images.filter((_, index) => index !== pendingRemoval));
+    setPendingRemoval(null);
   };
   return (
     <>
@@ -62,7 +64,7 @@ export function MealGallery({ label, images, onChange, notify }: Props) {
             </button>
             <button
               className="meal-image-remove"
-              onClick={() => remove(index)}
+              onClick={() => setPendingRemoval(index)}
               aria-label={`删除${label}图片 ${index + 1}`}
             >
               <X size={10} />
@@ -104,6 +106,14 @@ export function MealGallery({ label, images, onChange, notify }: Props) {
           />
         </div>
       )}
+      <ConfirmModal
+        open={pendingRemoval !== null}
+        title="删除饮食图片"
+        message="删除后无法恢复，确定移除这张图片吗？"
+        confirmLabel="删除"
+        onCancel={() => setPendingRemoval(null)}
+        onConfirm={remove}
+      />
     </>
   );
 }
