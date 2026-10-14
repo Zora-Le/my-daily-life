@@ -41,7 +41,7 @@ export function SettingsPage({
           <HardDrive />
           <span>
             <b>自动保存已开启</b>
-            <small>每日记录、任务、书架、便签、储蓄与奖励卡</small>
+            <small>每日记录、日记、日收支、书架、便签与奖励卡</small>
           </span>
           <ChevronRight />
         </button>

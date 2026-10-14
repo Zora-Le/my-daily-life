@@ -8,7 +8,9 @@ interface Props {
   day: DayRecord;
   books: ReadingItem[];
   notes: ReadingNote[];
+  progressText: string;
   onDay: (day: DayRecord) => void;
+  onProgressText: (text: string) => void;
   onBooks: (items: ReadingItem[]) => void;
   onNotes: (items: ReadingNote[]) => void;
   notify: (text: string) => void;
@@ -20,7 +22,9 @@ export function ProgressPage({
   day,
   books,
   notes,
+  progressText,
   onDay,
+  onProgressText,
   onBooks,
   onNotes,
   notify,
@@ -80,9 +84,13 @@ export function ProgressPage({
   };
   return (
     <>
-      <section className="progress-intro">
-        <span className="overline">{formatShort(date)}</span>
-        <h2>my progress</h2>
+      <section className="progress-intro editable-manifesto">
+        <span className="overline">{formatShort(date)} · MY PROGRESS</span>
+        <textarea
+          value={progressText}
+          onChange={event => onProgressText(event.target.value)}
+          aria-label="进步页自定义文字"
+        />
       </section>
       <section className="life-section">
         <div className="english-cards">

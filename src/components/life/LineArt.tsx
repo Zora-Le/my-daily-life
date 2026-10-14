@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 export type Phase = '卵泡期' | '排卵期' | '黄体期' | '月经期';
+export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
 const stroke = {
   fill: 'none',
   stroke: 'currentColor',
@@ -17,10 +18,10 @@ export function PhaseIcon({ phase }: { phase: Phase }) {
         />
       )}
       {phase === '排卵期' && (
-        <g {...stroke}>
-          <circle cx="12" cy="12" r="2.2" />
-          <path d="M12 9c-3-5-6-2-4 1-5-1-5 3-1 4-2 4 2 5 5 1 3 4 7 3 5-1 5-1 4-5 0-4 3-7 0-6 1-5-3-6-5-2Z" />
-        </g>
+        <path
+          {...stroke}
+          d="M12 10.1C9.7 5.2 5.9 6.4 7 10.4c-4.4-1-5.4 3-1.2 4.1-2.5 3.5.8 6.1 3.5 2.9.6 4.4 5 4.4 5.5.2 3.2 2.5 6.2-.7 3.1-3.5 4.3-1.7 3-5.9-1.2-5.5 1.5-4-1.1-7.2-4-4.2Z"
+        />
       )}
       {phase === '黄体期' && (
         <path {...stroke} d="M16.9 17.6A8 8 0 0 1 10 4a7 7 0 1 0 6.9 13.6Z" />
@@ -31,6 +32,36 @@ export function PhaseIcon({ phase }: { phase: Phase }) {
           d="M12 3.5c2.7 4 5.7 7.2 5.7 10.7A5.7 5.7 0 0 1 6.3 14.2C6.3 10.7 9.3 7.5 12 3.5Z"
         />
       )}
+    </svg>
+  );
+}
+export function SeasonIcon({ season }: { season: Season }) {
+  return (
+    <svg viewBox="0 0 30 24" aria-hidden="true">
+      <g {...stroke}>
+        {season === 'spring' && (
+          <>
+            <path d="M5 21c2-5 4-8 8-11M9 17c-2-2-4-2-6-1 1 2 3 3 6 1Zm2-3c3 0 5-1 6-4-3-.5-5 .7-6 4Z" />
+            <path d="M20 9c-4-2-2-6 1-4 1-4 5-2 4 1 4-1 5 3 2 5 2 3-2 5-4 2-3 3-6 0-3-2-3-2-1-4 3-2Z" />
+          </>
+        )}
+        {season === 'summer' && (
+          <path d="M2 17c4-3 7 3 11 0s7 3 11 0 4-1 5 0M19 15c0-6 1-9 5-12M23 5c-3-1-5 0-6 2M24 5c3 0 4 1 5 3M23 6c-3 1-4 3-4 5" />
+        )}
+        {season === 'autumn' && (
+          <>
+            <path d="M15 22V3M15 8l-5-4M15 12l6-5M15 16l-6-4M15 19l6-4" />
+            <path d="M8 3c3 0 4 1 4 3-3 0-4-1-4-3Zm13 2c-3 0-4 1-4 3 3 0 4-1 4-3ZM7 10c3 0 4 1 4 3-3 0-4-1-4-3Zm15 3c-3 0-4 1-4 3 3 0 4-1 4-3Z" />
+          </>
+        )}
+        {season === 'winter' && (
+          <>
+            <circle cx="15" cy="15" r="5" />
+            <circle cx="15" cy="7" r="3.5" />
+            <path d="M13.5 6h.1m2.8 0h.1M14 8.2c.7.5 1.3.5 2 0M9 14l-4-2m16 2 4-2M11 2h8M13 2V0m5 2-1-2M12 20h6" />
+          </>
+        )}
+      </g>
     </svg>
   );
 }

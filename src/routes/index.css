@@ -2989,3 +2989,547 @@ svg {
     border-radius: 24px 24px 0 0;
   }
 }
+
+/* 2026-10-14 diary, mood and daily money refinement */
+.calendar-caption {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 6px;
+}
+.calendar-caption .overline {
+  text-align: center;
+}
+.calendar-season {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #73878a;
+}
+.calendar-season > svg:first-child {
+  width: 15px;
+  height: 15px;
+}
+.calendar-season > svg:last-child {
+  width: 25px;
+  height: 20px;
+}
+.solar-term {
+  padding: 3px 5px;
+  border-radius: 7px;
+  background: #f1eee5;
+  color: #81765e;
+  font-family: var(--serif);
+  font-size: 9px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.phase-button[data-phase='月经期'],
+.phase-menu button[data-phase='月经期'] {
+  color: #b95655;
+}
+.phase-button:not([data-phase='月经期']),
+.phase-menu button:not([data-phase='月经期']) {
+  color: #7d8583;
+}
+.diet-heading {
+  align-items: center;
+}
+.weight-input {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  color: #7e817d;
+  font-size: 10px;
+}
+.weight-input input {
+  width: 58px;
+  height: 31px;
+  padding: 0 6px;
+  border: 0;
+  border-bottom: 1px solid #b9bbb5;
+  background: transparent;
+  outline: none;
+  font-family: var(--serif);
+  font-size: 16px;
+  text-align: right;
+}
+.mood-row {
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+}
+.pixel-mood {
+  min-width: 0;
+  padding: 8px 1px 7px;
+}
+.pixel-face {
+  width: 34px;
+  height: 34px;
+}
+.happy .pixel-face,
+.pixel-face.happy {
+  background: #efdadd;
+}
+.angry .pixel-face,
+.pixel-face.angry {
+  background: #a94848;
+  color: #fff8f2;
+}
+.pixel-face.angry > i {
+  background: #f7e8df;
+  box-shadow: 1px 0 #f7e8df;
+}
+.pixel-face.angry > b {
+  color: #fff8f2;
+}
+.pixel-face.anxious {
+  background: #d8d1dc;
+}
+.mood-zzz {
+  left: 30px;
+  top: -13px;
+}
+.mood-zzz em {
+  position: absolute;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 600;
+}
+.mood-zzz em:nth-child(1) {
+  left: 0;
+  top: 15px;
+}
+.mood-zzz em:nth-child(2) {
+  left: 5px;
+  top: 7px;
+  font-size: 10px;
+}
+.mood-zzz em:nth-child(3) {
+  left: 11px;
+  top: -2px;
+  font-size: 12px;
+}
+.mood-cloud {
+  position: absolute;
+  width: 22px;
+  height: 15px;
+  left: 6px;
+  top: -10px;
+  color: #777d80;
+  fill: #d8dcda;
+}
+.mood-hammer {
+  position: absolute;
+  width: 19px;
+  height: 19px;
+  right: -9px;
+  top: -8px;
+  color: #786b64;
+  transform-origin: 3px 17px;
+}
+.pixel-face.is-active .mood-hammer {
+  animation: anxious-hammer .55s ease-in-out infinite alternate;
+}
+@keyframes anxious-hammer {
+  to {
+    transform: rotate(-38deg) translate(-2px, 2px);
+  }
+}
+.mood-factor {
+  display: block;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 13px;
+  background: #f5f2eb;
+}
+.mood-factor span {
+  display: block;
+  margin-bottom: 5px;
+  color: #898b85;
+  font-size: 9px;
+}
+.mood-factor input {
+  width: 100%;
+  padding: 5px 0;
+  border: 0;
+  border-bottom: 1px solid #d5d1c8;
+  outline: 0;
+  background: transparent;
+  font-size: 11px;
+}
+.mood-month {
+  width: 100%;
+  max-width: 430px;
+  padding: 21px;
+  border-radius: 26px 26px 16px 16px;
+  background: var(--paper);
+  box-shadow: 0 -10px 35px rgba(40, 38, 34, 0.16);
+}
+.mood-weekdays,
+.mood-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+.mood-weekdays {
+  margin-bottom: 7px;
+  color: #9b9b94;
+  font-size: 8px;
+  text-align: center;
+}
+.mood-calendar-grid > div {
+  min-height: 46px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 1px;
+  border: 1px solid #ebe7df;
+  border-radius: 9px;
+}
+.mood-calendar-grid small {
+  color: #8a8c86;
+  font-size: 8px;
+}
+.mood-calendar-grid .pixel-face {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+}
+.mood-calendar-grid .pixel-face > i {
+  top: 6px;
+  width: 2px;
+  height: 2px;
+  box-shadow: none;
+}
+.mood-calendar-grid .pixel-face > i:first-child {
+  left: 6px;
+}
+.mood-calendar-grid .pixel-face > i:nth-child(2) {
+  right: 6px;
+}
+.mood-calendar-grid .pixel-face > b {
+  bottom: 2px;
+  font-size: 7px;
+}
+.empty-face {
+  width: 20px;
+  height: 20px;
+  border: 1px dashed #e5e1d9;
+  border-radius: 6px;
+}
+.journal-handle {
+  position: fixed;
+  z-index: 8;
+  left: calc(50% + min(215px, 50vw) - 23px);
+  top: 54%;
+  width: 25px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d9d5cc;
+  border-right: 0;
+  border-radius: 13px 0 0 13px;
+  background: #f4efe5;
+  color: #858078;
+  box-shadow: -4px 3px 10px rgba(70, 62, 52, 0.06);
+}
+.journal-handle svg {
+  width: 13px;
+}
+.journal-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  justify-content: center;
+  background: rgba(48, 49, 46, 0.34);
+}
+.journal-drawer {
+  width: 100%;
+  max-width: 430px;
+  height: 100%;
+  margin-left: auto;
+  padding: 25px 20px 40px;
+  overflow-y: auto;
+  background: #fffdf8;
+  box-shadow: -14px 0 36px rgba(38, 36, 32, 0.15);
+  animation: drawer-in .28s ease-out;
+}
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+.journal-drawer header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.journal-drawer header span {
+  color: #7b8d8d;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+}
+.journal-drawer header h2 {
+  margin: 7px 0 0;
+  font-family: var(--serif);
+  font-size: 21px;
+  font-weight: 400;
+}
+.journal-drawer header button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: transparent;
+}
+.journal-compose {
+  margin-top: 26px;
+  padding: 15px;
+  border: 1px solid #e1ddd4;
+  border-radius: 18px;
+  background: #faf7f0;
+}
+.journal-compose textarea {
+  width: 100%;
+  min-height: 125px;
+  padding: 3px;
+  resize: vertical;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 23px;
+}
+.hold-publish {
+  position: relative;
+  width: 100%;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  background: #e1e6e3;
+  color: #435c58;
+  font-size: 10px;
+  touch-action: none;
+}
+.hold-publish i {
+  position: absolute;
+  inset: 0;
+  background: #748b87;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.hold-publish svg,
+.hold-publish span {
+  position: relative;
+  z-index: 1;
+}
+.hold-publish.pressing {
+  color: white;
+}
+.hold-publish.pressing i {
+  animation: publish-progress 1.4s linear forwards;
+}
+@keyframes publish-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+.journal-timeline {
+  margin-top: 30px;
+  padding-left: 18px;
+  border-left: 1px solid #d9d5cc;
+}
+.journal-timeline article {
+  position: relative;
+  padding: 0 0 25px 15px;
+}
+.journal-timeline article:before {
+  content: '';
+  position: absolute;
+  left: -22px;
+  top: 3px;
+  width: 7px;
+  height: 7px;
+  border: 2px solid #fffdf8;
+  border-radius: 50%;
+  background: #829590;
+  box-shadow: 0 0 0 1px #829590;
+}
+.journal-timeline time {
+  color: #90918b;
+  font-size: 8px;
+  letter-spacing: .5px;
+}
+.journal-timeline p {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--serif);
+  font-size: 13px;
+  line-height: 22px;
+}
+.journal-empty {
+  color: #aaa69e;
+  font-family: var(--serif);
+  font-size: 12px;
+}
+.editable-manifesto,
+.editable-reward-title {
+  background: var(--yellow-soft);
+}
+.editable-manifesto textarea,
+.editable-reward-title textarea,
+.editable-reward-title input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  resize: none;
+}
+.editable-manifesto textarea {
+  min-height: 62px;
+  margin-top: 10px;
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 28px;
+}
+.editable-reward-title input {
+  color: #798d94;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.75px;
+}
+.editable-reward-title textarea {
+  min-height: 62px;
+  margin-top: 9px;
+  font-family: var(--serif);
+  font-size: 21px;
+  line-height: 30px;
+}
+.daily-money-entry {
+  margin-top: 16px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: #faf8f3;
+}
+.daily-money-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.daily-money-head b {
+  font-size: 12px;
+  font-weight: 500;
+}
+.daily-money-head input {
+  height: 28px;
+  padding: 0 6px;
+  border: 0;
+  border-bottom: 1px solid #d7d2ca;
+  background: transparent;
+  font-size: 9px;
+}
+.money-kind {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  margin: 9px 0 7px;
+  padding: 3px;
+  border-radius: 10px;
+  background: #ece9e3;
+}
+.money-kind button {
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #888983;
+  font-size: 9px;
+}
+.money-kind button.active {
+  background: #fff;
+  color: #596c69;
+  box-shadow: 0 1px 4px rgba(50, 48, 44, 0.06);
+}
+.money-entry-fields {
+  display: grid;
+  grid-template-columns: 72px 1fr 34px;
+  gap: 5px;
+}
+.money-entry-fields input {
+  min-width: 0;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid #dedbd4;
+  border-radius: 9px;
+  background: #fff;
+  font-size: 10px;
+}
+.money-entry-fields button {
+  border: 0;
+  border-radius: 9px;
+  background: #708589;
+  color: #fff;
+  display: grid;
+  place-items: center;
+}
+.latest-transaction {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 2px 0;
+  color: #898a84;
+  font-size: 8px;
+}
+.latest-transaction b {
+  color: #6b7976;
+  font-weight: 500;
+}
+.money-chart-section {
+  margin-top: 24px;
+}
+@media (max-width: 390px) {
+  .calendar-caption {
+    gap: 3px;
+  }
+  .calendar-caption .overline {
+    font-size: 7px;
+    letter-spacing: .7px;
+  }
+  .calendar-season > svg:last-child {
+    width: 22px;
+  }
+  .mood-row {
+    gap: 2px;
+  }
+  .pixel-face {
+    width: 31px;
+    height: 31px;
+  }
+  .pixel-mood small {
+    font-size: 8px;
+  }
+  .journal-handle {
+    left: auto;
+    right: 0;
+  }
+  .journal-drawer {
+    max-width: 94%;
+  }
+  .mood-month {
+    max-width: 100%;
+    border-radius: 26px 26px 0 0;
+  }
+}

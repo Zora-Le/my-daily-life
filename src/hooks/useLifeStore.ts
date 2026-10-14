@@ -12,6 +12,8 @@ export type DayRecord = {
   meals: Record<'breakfast' | 'lunch' | 'dinner', Meal>;
   exercise: { cardio: boolean; strength: boolean };
   mood?: string;
+  moodFactor?: string;
+  weight?: string;
   english: EnglishRecord;
 };
 export type LifeTask = {
@@ -44,10 +46,14 @@ export type RewardCard = {
   image?: string;
   drawnAt?: string;
 };
-export type MonthlyMoney = {
-  month: string;
-  income: number;
-  expense: number;
+export type MonthlyMoney = { month: string; income: number; expense: number };
+export type JournalEntry = { id: number; text: string; createdAt: string };
+export type MoneyTransaction = {
+  id: number;
+  date: string;
+  kind: 'income' | 'expense';
+  amount: number;
+  detail: string;
 };
 export type LifeState = {
   version: 2;
@@ -56,6 +62,8 @@ export type LifeState = {
   phases: Record<string, Phase>;
   books: ReadingItem[];
   notes: ReadingNote[];
+  progressText: string;
+  journals: JournalEntry[];
   savings: {
     id: string;
     name: string;
@@ -64,6 +72,9 @@ export type LifeState = {
     value: number;
   }[];
   monthlyMoney: MonthlyMoney[];
+  moneyTransactions: MoneyTransaction[];
+  rewardTitle: string;
+  rewardCopy: string;
   rewardCards: RewardCard[];
   drawHistory: { cardId: string; drawnAt: string }[];
 };
@@ -104,6 +115,8 @@ const initialState: LifeState = {
       createdAt: '2026-10-13',
     },
   ],
+  progressText: '把今天学到的一点点，慢慢积成自己的光。',
+  journals: [],
   savings: [
     {
       id: 'cash',
@@ -135,6 +148,9 @@ const initialState: LifeState = {
     { month: '9月', income: 17600, expense: 9400 },
     { month: '10月', income: 19300, expense: 9800 },
   ],
+  moneyTransactions: [],
+  rewardTitle: 'A SMALL REWARD',
+  rewardCopy: '认真生活，也给自己一份奖励。',
   rewardCards: [
     { id: 's1', kind: 'sweet', title: '黄昏散步', copy: '风把今天吹得很轻。' },
     {
@@ -167,6 +183,10 @@ function normalize(parsed: Partial<LifeState>): LifeState {
     ...parsed,
     version: 2,
     days,
+    journals: Array.isArray(parsed.journals) ? parsed.journals : [],
+    moneyTransactions: Array.isArray(parsed.moneyTransactions)
+      ? parsed.moneyTransactions
+      : [],
     monthlyMoney: parsed.monthlyMoney?.length
       ? parsed.monthlyMoney
       : initialState.monthlyMoney,

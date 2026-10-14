@@ -1,5 +1,5 @@
 import { DailyPage } from '@/components/life/DailyPage';
-import { BookIcon, TulipIcon } from '@/components/life/LineArt';
+import { BookIcon } from '@/components/life/LineArt';
 import { MoneyPage } from '@/components/life/MoneyPage';
 import { ProgressPage } from '@/components/life/ProgressPage';
 import { RewardsPage } from '@/components/life/RewardsPage';
@@ -7,7 +7,7 @@ import { SettingsPage } from '@/components/life/SettingsPage';
 import type { LifeTask } from '@/hooks/useLifeStore';
 import { emptyDay, useLifeStore } from '@/hooks/useLifeStore';
 import { TODAY, weekStart } from '@/lib/lifeUtils';
-import { CalendarDays, Settings, WalletCards, X } from 'lucide-react';
+import { CalendarDays, Gift, Settings, WalletCards, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 type PageKey = 'daily' | 'progress' | 'money' | 'rewards' | 'settings';
@@ -57,7 +57,7 @@ export default function Page() {
     () =>
       ({
         daily: 'My Daily',
-        progress: '我的进步 my progress',
+        progress: 'My Progress',
         money: '收入与支出',
         rewards: '奖励',
         settings: '设置',
@@ -99,7 +99,7 @@ export default function Page() {
     { key: 'daily', label: '日常', icon: <CalendarDays /> },
     { key: 'progress', label: '进步', icon: <BookIcon /> },
     { key: 'money', label: '收支', icon: <WalletCards /> },
-    { key: 'rewards', label: '奖励', icon: <TulipIcon /> },
+    { key: 'rewards', label: '奖励', icon: <Gift /> },
   ];
   return (
     <main className="app-shell">
@@ -119,12 +119,17 @@ export default function Page() {
               date={date}
               week={week}
               day={day}
+              days={state.days}
               tasks={state.tasks}
               phases={state.phases}
+              journals={state.journals}
               onDate={setDate}
               onWeek={setWeek}
               onDay={next => updateDay(date, () => next)}
               onTasks={tasks => update(current => ({ ...current, tasks }))}
+              onJournals={journals =>
+                update(current => ({ ...current, journals }))
+              }
               onPhase={(iso, phase) =>
                 update(current => ({
                   ...current,
@@ -143,7 +148,11 @@ export default function Page() {
               day={day}
               books={state.books}
               notes={state.notes}
+              progressText={state.progressText}
               onDay={next => updateDay(date, () => next)}
+              onProgressText={progressText =>
+                update(current => ({ ...current, progressText }))
+              }
               onBooks={books => update(current => ({ ...current, books }))}
               onNotes={notes => update(current => ({ ...current, notes }))}
               notify={notify}
@@ -153,6 +162,10 @@ export default function Page() {
             <MoneyPage
               savings={state.savings}
               monthlyMoney={state.monthlyMoney}
+              transactions={state.moneyTransactions}
+              onTransactions={moneyTransactions =>
+                update(current => ({ ...current, moneyTransactions }))
+              }
               onMonthlyMoney={monthlyMoney =>
                 update(current => ({ ...current, monthlyMoney }))
               }
@@ -167,6 +180,14 @@ export default function Page() {
               unlocked={unlocked}
               cards={state.rewardCards}
               history={state.drawHistory}
+              title={state.rewardTitle}
+              copy={state.rewardCopy}
+              onTitle={rewardTitle =>
+                update(current => ({ ...current, rewardTitle }))
+              }
+              onCopy={rewardCopy =>
+                update(current => ({ ...current, rewardCopy }))
+              }
               onCards={rewardCards =>
                 update(current => ({ ...current, rewardCards }))
               }

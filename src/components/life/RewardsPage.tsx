@@ -14,6 +14,10 @@ interface Props {
   unlocked: boolean;
   cards: RewardCard[];
   history: { cardId: string; drawnAt: string }[];
+  title: string;
+  copy: string;
+  onTitle: (value: string) => void;
+  onCopy: (value: string) => void;
   onCards: (cards: RewardCard[]) => void;
   onHistory: (items: { cardId: string; drawnAt: string }[]) => void;
   notify: (text: string) => void;
@@ -22,6 +26,10 @@ export function RewardsPage({
   unlocked,
   cards,
   history,
+  title,
+  copy,
+  onTitle,
+  onCopy,
   onCards,
   onHistory,
   notify,
@@ -49,9 +57,17 @@ export function RewardsPage({
   };
   return (
     <>
-      <section className="reward-title">
-        <span className="overline">A SMALL REWARD</span>
-        <h2>认真生活，也给自己一份奖励。</h2>
+      <section className="reward-title editable-reward-title">
+        <input
+          value={title}
+          onChange={event => onTitle(event.target.value)}
+          aria-label="奖励小标题"
+        />
+        <textarea
+          value={copy}
+          onChange={event => onCopy(event.target.value)}
+          aria-label="奖励寄语"
+        />
       </section>
       <section className={`draw-deck ${unlocked ? 'unlocked' : 'locked'}`}>
         <div className="deck-cards botanical">
