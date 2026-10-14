@@ -79,25 +79,40 @@ function ProgressCard({ item, record, onPatch }: CardProps) {
   );
 }
 
+const DAILY_ENGLISH_IDS = new Set(['progress-listening', 'progress-speaking']);
+
 export function ProgressCheckins({ items, records, onChange }: Props) {
   const active = items.filter(item => !item.archivedAt);
+  const englishItems = active.filter(item => DAILY_ENGLISH_IDS.has(item.id));
+  const otherItems = active.filter(item => !DAILY_ENGLISH_IDS.has(item.id));
   const recordFor = (id: string) =>
     records[id] ?? { planned: 0, completed: false };
   const patch = (id: string, value: Partial<ProgressRecord>) =>
     onChange({ ...records, [id]: { ...recordFor(id), ...value } });
+  const renderCard = (item: ConfigItem) => (
+    <ProgressCard
+      key={item.id}
+      item={item}
+      record={recordFor(item.id)}
+      onPatch={value => patch(item.id, value)}
+    />
+  );
 
   return (
     <section className="life-section progress-checkin-section">
-      <div className="progress-checkin-grid">
-        {active.map(item => (
-          <ProgressCard
-            key={item.id}
-            item={item}
-            record={recordFor(item.id)}
-            onPatch={value => patch(item.id, value)}
-          />
-        ))}
-      </div>
+      {englishItems.length > 0 && (
+        <div className="progress-group">
+          <h2 className="progress-group-title">每日英语</h2>
+          <div className="progress-checkin-grid">
+            {englishItems.map(renderCard)}
+          </div>
+        </div>
+      )}
+      {otherItems.length > 0 && (
+        <div className="progress-checkin-grid progress-other-items">
+          {otherItems.map(renderCard)}
+        </div>
+      )}
     </section>
   );
 }

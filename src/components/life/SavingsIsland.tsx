@@ -1,10 +1,10 @@
 import type { SavingsIsland as SavingsIslandData } from '@/hooks/lifeSchema';
 import { Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import type { PointerEvent } from 'react';
 
 interface Props {
   item: SavingsIslandData;
+  editMode: boolean;
   editingName: boolean;
   onEditingName: (editing: boolean) => void;
   onName: (name: string) => void;
@@ -12,10 +12,9 @@ interface Props {
   onDelete: () => void;
 }
 
-const LONG_PRESS_MS = 900;
-
 export function SavingsIsland({
   item,
+  editMode,
   editingName,
   onEditingName,
   onName,
@@ -25,11 +24,8 @@ export function SavingsIsland({
   const [nameDraft, setNameDraft] = useState(item.displayName);
   const [editingAmount, setEditingAmount] = useState(false);
   const [amountDraft, setAmountDraft] = useState(item.expression);
-  const [holding, setHolding] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nameInput = useRef<HTMLInputElement>(null);
   const amountInput = useRef<HTMLInputElement>(null);
-  const longPressTriggered = useRef(false);
 
   useEffect(() => {
     if (editingName) nameInput.current?.focus();
@@ -37,28 +33,10 @@ export function SavingsIsland({
   useEffect(() => {
     if (editingAmount) amountInput.current?.focus();
   }, [editingAmount]);
-
   const confirmDelete = () => {
     if (window.confirm(`删除“${item.displayName}”？金额记录将一并移除。`)) {
       onDelete();
     }
-  };
-  const clearPress = () => {
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = null;
-    setHolding(false);
-  };
-  const startPress = (event: PointerEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    longPressTriggered.current = false;
-    setHolding(true);
-    timer.current = setTimeout(() => {
-      longPressTriggered.current = true;
-      setHolding(false);
-      navigator.vibrate?.(35);
-      confirmDelete();
-    }, LONG_PRESS_MS);
   };
   const saveName = () => {
     const value = nameDraft.trim();
@@ -71,7 +49,7 @@ export function SavingsIsland({
   };
 
   return (
-    <article className="paper-island">
+    <article className={`paper-island ${editMode ? 'is-editing' : ''}`}>
       <div className="island-name">
         {editingName ? (
           <input
@@ -89,9 +67,9 @@ export function SavingsIsland({
             }}
             onClick={event => event.stopPropagation()}
           />
-        ) : (
+        ) : editMode ? (
           <button
-            className="island-name-button"
+            className="island-name-button editable"
             onClick={event => {
               event.stopPropagation();
               setNameDraft(item.displayName);
@@ -101,6 +79,8 @@ export function SavingsIsland({
           >
             {item.displayName}
           </button>
+        ) : (
+          <span className="island-name-text">{item.displayName}</span>
         )}
       </div>
       {editingAmount ? (
@@ -134,24 +114,20 @@ export function SavingsIsland({
         </button>
       )}
       {item.detail && <span>{item.detail}</span>}
-      <button
-        className={`island-delete ${holding ? 'holding' : ''}`}
-        aria-label={`长按删除${item.displayName}`}
-        title="按住 0.9 秒删除"
-        onContextMenu={event => event.preventDefault()}
-        onPointerDown={startPress}
-        onPointerUp={clearPress}
-        onPointerCancel={clearPress}
-        onLostPointerCapture={clearPress}
-        onClick={event => {
-          event.stopPropagation();
-          if (event.detail === 0 && !longPressTriggered.current)
+      {editMode && (
+        <button
+          type="button"
+          className="island-delete"
+          aria-label={`删除${item.displayName}`}
+          title="删除岛屿"
+          onClick={event => {
+            event.stopPropagation();
             confirmDelete();
-        }}
-      >
-        <Trash2 size={13} />
-        <span>长按</span>
-      </button>
+          }}
+        >
+          <Trash2 size={12} />
+        </button>
+      )}
     </article>
   );
 }

@@ -48,6 +48,7 @@ export function MoneyPage({
   notify,
 }: Props) {
   const [editingName, setEditingName] = useState<string | null>(null);
+  const [editingSavings, setEditingSavings] = useState(false);
   const commitSaving = (item: Saving, expression: string) => {
     try {
       const value = safeCalculate(expression);
@@ -92,6 +93,17 @@ export function MoneyPage({
             <span className="overline">PLATFORM SAVINGS</span>
             <h2>平台储蓄</h2>
           </div>
+          <button
+            type="button"
+            className="savings-edit-toggle"
+            aria-pressed={editingSavings}
+            onClick={() => {
+              setEditingSavings(active => !active);
+              setEditingName(null);
+            }}
+          >
+            {editingSavings ? '完成' : '编辑'}
+          </button>
         </div>
         <div className="island-map">
           <div className="wave wave-one" />
@@ -101,6 +113,7 @@ export function MoneyPage({
               <SavingsIsland
                 item={item}
                 key={item.id}
+                editMode={editingSavings}
                 editingName={editingName === item.id}
                 onEditingName={active =>
                   setEditingName(active ? item.id : null)
@@ -114,10 +127,12 @@ export function MoneyPage({
                 }
               />
             ))}
-            <button className="add-island" onClick={addIsland}>
-              <Plus size={15} />
-              添加岛屿
-            </button>
+            {editingSavings && (
+              <button className="add-island" onClick={addIsland}>
+                <Plus size={13} />
+                添加岛屿
+              </button>
+            )}
           </div>
         </div>
         <p className="savings-total">
