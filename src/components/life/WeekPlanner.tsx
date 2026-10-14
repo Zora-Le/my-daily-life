@@ -1,4 +1,5 @@
-import type { LifeTask } from '@/hooks/useLifeStore';
+import type { LifeTask, MenstrualRecord } from '@/hooks/useLifeStore';
+import { cycleDayInfo } from '@/lib/cycleRules';
 import {
   TODAY,
   addDays,
@@ -11,21 +12,23 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  Droplet,
   Plus,
+  ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
-import { type Phase, PhaseIcon } from './LineArt';
 
-const phases: Phase[] = ['卵泡期', '排卵期', '黄体期', '月经期'];
 const weekNames = ['一', '二', '三', '四', '五', '六', '日'];
 interface Props {
   tasks: LifeTask[];
   week: string;
   selectedDate: string;
-  phasesByDate: Record<string, Phase>;
+  menstrualRecords: MenstrualRecord[];
   onWeekChange: (iso: string) => void;
   onSelectDate: (iso: string) => void;
-  onPhase: (iso: string, phase: Phase) => void;
+  onMarkStart: (iso: string) => void;
+  onMarkEnd: (iso: string) => void;
   onTasks: (tasks: LifeTask[]) => void;
   openTask: (start: string, end: string) => void;
 }
@@ -61,11 +64,17 @@ function placeTasks(
     });
 }
 
+function CycleIcon({ phase }: { phase?: string }) {
+  if (phase === '月经期') return <Droplet />;
+  if (phase === '排卵期') return <Sparkles />;
+  return <ShieldCheck />;
+}
+
 export function WeekPlanner(props: Props) {
   const days = Array.from({ length: 7 }, (_, i) =>
     addDays(weekStart(props.week), i),
   );
-  const [editingPhase, setEditingPhase] = useState<string | null>(null);
+  const [editingCycle, setEditingCycle] = useState<string | null>(null);
   const [drag, setDrag] = useState<{ start: number; end: number } | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const placed = useMemo(
@@ -88,6 +97,10 @@ export function WeekPlanner(props: Props) {
     const end = Math.max(drag.start, drag.end);
     setDrag(null);
     props.openTask(days[start], days[end]);
+  };
+  const openCycle = (iso: string) => {
+    props.onSelectDate(iso);
+    setEditingCycle(iso);
   };
   return (
     <section className="week-planner">
@@ -123,49 +136,70 @@ export function WeekPlanner(props: Props) {
       <div className="week-calendar">
         <div className="week-date-grid">
           {days.map((iso, index) => {
-            const phase = props.phasesByDate[iso] ?? '卵泡期';
+            const info = cycleDayInfo(iso, props.menstrualRecords);
+            const recordedPeriod = info?.phase === '月经期' && !info.predicted;
             return (
               <div
                 className={`week-date ${iso === TODAY ? 'today' : ''} ${iso === props.selectedDate ? 'selected' : ''}`}
                 key={iso}
               >
                 <button
-                  className="phase-button tiny"
-                  data-phase={phase}
-                  onClick={() =>
-                    setEditingPhase(editingPhase === iso ? null : iso)
-                  }
-                  aria-label="修改周期阶段"
+                  className={`cycle-marker ${info?.predicted ? 'predicted' : ''}`}
+                  data-phase={info?.phase ?? '未记录'}
+                  onClick={() => openCycle(iso)}
+                  aria-label={`${info?.predicted ? '预测' : ''}${info?.phase ?? '周期未记录'}，打开周期操作`}
                 >
-                  <PhaseIcon phase={phase} />
+                  <CycleIcon phase={info?.phase} />
                 </button>
                 <button
                   className="week-date-button"
-                  onClick={() => props.onSelectDate(iso)}
+                  onClick={() => openCycle(iso)}
                 >
                   <span>周{weekNames[index]}</span>
                   <b>{fromIso(iso).getDate()}</b>
                 </button>
-                {editingPhase === iso && (
-                  <div className="phase-menu horizontal-menu">
-                    {phases.map(item => (
-                      <button
-                        key={item}
-                        data-phase={item}
-                        onClick={() => {
-                          props.onPhase(iso, item);
-                          setEditingPhase(null);
-                        }}
-                      >
-                        <PhaseIcon phase={item} />
-                        <span>{item}</span>
-                      </button>
-                    ))}
+                {editingCycle === iso && (
+                  <div className="cycle-action" aria-label="生理周期操作">
+                    <strong>{formatShort(iso)}</strong>
+                    <small>
+                      {info
+                        ? `${info.predicted ? '预测' : '已记录'} · ${info.phase}`
+                        : '尚无周期记录'}
+                    </small>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (recordedPeriod) props.onMarkEnd(iso);
+                        else props.onMarkStart(iso);
+                        setEditingCycle(null);
+                      }}
+                    >
+                      <Droplet size={13} />
+                      {recordedPeriod ? '设为经期结束' : '标记月经开始'}
+                    </button>
                   </div>
                 )}
               </div>
             );
           })}
+        </div>
+        <div className="cycle-legend" aria-label="周期图例">
+          <span data-phase="月经期">
+            <i />
+            <b>经期</b>
+          </span>
+          <span data-phase="排卵期">
+            <i />
+            <b>排卵期</b>
+          </span>
+          <span data-phase="安全期">
+            <i />
+            <b>安全期</b>
+          </span>
+          <span className="prediction-key">
+            <i />
+            <b>虚线为预测</b>
+          </span>
         </div>
         <div
           ref={trackRef}

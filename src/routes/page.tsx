@@ -10,6 +10,7 @@ import type {
   PendingExpense,
 } from '@/hooks/useLifeStore';
 import { emptyDay, useLifeStore } from '@/hooks/useLifeStore';
+import { markPeriodEnd, markPeriodStart } from '@/lib/cycleRules';
 import { isRewardUnlocked } from '@/lib/lifeRules';
 import { TODAY, weekStart } from '@/lib/lifeUtils';
 import { CalendarDays, Gift, Settings, WalletCards, X } from 'lucide-react';
@@ -186,7 +187,7 @@ export default function Page() {
               day={day}
               days={state.days}
               tasks={state.tasks}
-              phases={state.phases}
+              menstrualRecords={state.menstrualRecords}
               journals={state.journals}
               habitItems={state.habitItems}
               onDate={setDate}
@@ -196,12 +197,26 @@ export default function Page() {
               onJournals={journals =>
                 update(current => ({ ...current, journals }))
               }
-              onPhase={(iso, phase) =>
+              onMarkPeriodStart={iso => {
                 update(current => ({
                   ...current,
-                  phases: { ...current.phases, [iso]: phase },
-                }))
-              }
+                  menstrualRecords: markPeriodStart(
+                    current.menstrualRecords,
+                    iso,
+                  ),
+                }));
+                notify('已标记月经开始，并刷新周期预测');
+              }}
+              onMarkPeriodEnd={iso => {
+                update(current => ({
+                  ...current,
+                  menstrualRecords: markPeriodEnd(
+                    current.menstrualRecords,
+                    iso,
+                  ),
+                }));
+                notify('已更新经期结束日，并刷新周期预测');
+              }}
               openTask={(start, end) =>
                 setDraft({ title: '', start, end, tone: 'blue' })
               }

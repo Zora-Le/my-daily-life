@@ -58,6 +58,11 @@ export type RewardCard = {
 };
 export type MonthlyMoney = { month: string; income: number; expense: number };
 export type JournalEntry = { id: number; text: string; createdAt: string };
+export type MenstrualRecord = {
+  start: string;
+  end: string;
+  manualEnd?: boolean;
+};
 export type MoneyTransaction = {
   id: number;
   date: string;
@@ -84,6 +89,7 @@ export type LifeState = {
   days: Record<string, DayRecord>;
   tasks: LifeTask[];
   phases: Record<string, Phase>;
+  menstrualRecords: MenstrualRecord[];
   books: ReadingItem[];
   notes: ReadingNote[];
   progressText: string;
@@ -175,6 +181,7 @@ export const initialState: LifeState = {
   days: {},
   tasks: [],
   phases: {},
+  menstrualRecords: [],
   books: [
     { id: 1, title: '《悉达多》', shelf: 1, createdAt: '2026-10-12' },
     {
@@ -357,6 +364,15 @@ export function normalizeLifeState(parsed: LegacyLifeState): LifeState {
     ...parsed,
     version: 2,
     days,
+    menstrualRecords: Array.isArray(parsed.menstrualRecords)
+      ? parsed.menstrualRecords
+          .filter(item => item && typeof item.start === 'string')
+          .map(item => ({
+            start: item.start,
+            end: typeof item.end === 'string' ? item.end : item.start,
+            ...(item.manualEnd ? { manualEnd: true } : {}),
+          }))
+      : [],
     journals: Array.isArray(parsed.journals) ? parsed.journals : [],
     savings: normalizeSavings(parsed.savings, parsed.platformSavings),
     monthlyMoney: Array.isArray(parsed.monthlyMoney) ? parsed.monthlyMoney : [],

@@ -4310,25 +4310,23 @@ svg {
 
 /* Configurable savings islands */
 .savings-card.narrow {
-  width: min(78%, 620px);
-  max-width: 620px;
+  width: min(94%, 720px);
+  max-width: 720px;
   margin: 3px auto 0;
-  padding: 18px;
+  padding: 16px;
 }
 .savings-card .island-map {
   height: auto;
-  min-height: 235px;
+  min-height: 112px;
   padding: 10px 14px;
   overflow: hidden;
 }
 .island-list {
   position: relative;
   z-index: 2;
-  min-height: 215px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
   gap: 10px;
-  align-content: center;
   align-items: center;
 }
 .island-list .paper-island {
@@ -4434,7 +4432,7 @@ svg {
 
 @media (max-width: 430px) {
   .savings-card.narrow {
-    width: 78%;
+    width: calc(100% - 24px);
   }
   .savings-card .island-map {
     padding: 10px;
@@ -4515,5 +4513,174 @@ svg {
   from {
     transform: translateY(8px) scale(.98);
     opacity: 0;
+  }
+}
+
+/* Automatic menstrual-cycle calendar */
+.cycle-marker {
+  position: absolute;
+  z-index: 2;
+  left: 4px;
+  top: 4px;
+  width: 22px;
+  height: 22px;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: #edf1ed;
+  color: #70867a;
+}
+.cycle-marker svg {
+  width: 100%;
+  height: 100%;
+}
+.cycle-marker[data-phase='月经期'] {
+  border-color: #c96f72;
+  background: #f7dddf;
+  color: #aa4f55;
+}
+.cycle-marker[data-phase='排卵期'] {
+  border-color: #d7b85e;
+  background: #fff1bd;
+  color: #987823;
+}
+.cycle-marker[data-phase='安全期'] {
+  border-color: #80aa8e;
+  background: #dcebdd;
+  color: #557b62;
+}
+.cycle-marker[data-phase='未记录'] {
+  border-color: #cfd2cd;
+  background: #f4f4f1;
+  color: #a0a39d;
+}
+.cycle-marker.predicted {
+  border-style: dashed;
+  opacity: 0.68;
+}
+.cycle-action {
+  position: absolute;
+  z-index: 12;
+  left: 2px;
+  top: 54px;
+  width: 154px;
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+  border: 1px solid #dedbd4;
+  border-radius: 13px;
+  background: #fffefa;
+  box-shadow: 0 9px 24px rgba(61, 58, 52, 0.16);
+  text-align: left;
+}
+.week-date:nth-child(n + 5) .cycle-action {
+  left: auto;
+  right: 2px;
+}
+.cycle-action strong {
+  font-family: var(--serif);
+  font-size: 12px;
+  font-weight: 500;
+}
+.cycle-action small {
+  color: #81837e;
+  font-size: 9px;
+}
+.cycle-action button {
+  min-height: 30px;
+  margin-top: 3px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #e3c4c5;
+  border-radius: 9px;
+  background: #fae8e9;
+  color: #985256;
+  font-size: 9px;
+}
+.cycle-legend {
+  min-height: 28px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px 9px;
+  border-bottom: 1px solid var(--line);
+  color: #777b75;
+}
+.cycle-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cycle-legend i {
+  width: 9px;
+  height: 9px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+}
+.cycle-legend b {
+  font-size: 8px;
+  font-weight: 400;
+}
+.cycle-legend [data-phase='月经期'] i {
+  border-color: #c96f72;
+  background: #eaa6aa;
+}
+.cycle-legend [data-phase='排卵期'] i {
+  border-color: #d7b85e;
+  background: #f2d775;
+}
+.cycle-legend [data-phase='安全期'] i {
+  border-color: #80aa8e;
+  background: #9dc7a8;
+}
+.cycle-legend .prediction-key i {
+  border-color: #969a94;
+  border-style: dashed;
+  background: transparent;
+}
+
+/* Keep the savings sea wider and moderate in height; restore island proportions. */
+.savings-card.narrow {
+  width: min(94%, 720px);
+  max-width: 720px;
+  padding: 16px;
+}
+.savings-card .island-map {
+  height: 178px;
+  min-height: 0;
+}
+.island-list {
+  height: 100%;
+  min-height: 0;
+  align-content: center;
+}
+.island-list .paper-island {
+  width: 112px;
+  height: 68px;
+  justify-self: center;
+  padding: 8px;
+  border-radius: 48% 52% 45% 55%;
+}
+.island-list .paper-island:nth-child(3n + 2) {
+  width: 143px;
+  height: 88px;
+  border-radius: 53% 47% 55% 45%;
+}
+.island-list .paper-island:nth-child(3n) {
+  width: 91px;
+  height: 56px;
+  border-radius: 56% 44% 49% 51%;
+}
+@media (max-width: 430px) {
+  .savings-card.narrow {
+    width: calc(100% - 24px);
+  }
+  .cycle-legend {
+    gap: 4px 7px;
   }
 }

@@ -4,12 +4,12 @@ import type {
   JournalEntry,
   LifeTask,
   Meal,
+  MenstrualRecord,
 } from '@/hooks/useLifeStore';
 import { TODAY, formatShort, weekStart } from '@/lib/lifeUtils';
 import { RotateCcw } from 'lucide-react';
 import { HabitCheckins } from './HabitCheckins';
 import { JournalDrawer } from './JournalDrawer';
-import type { Phase } from './LineArt';
 import { MealGallery } from './MealGallery';
 import { MoodPanel } from './MoodPanel';
 import { WeekPlanner } from './WeekPlanner';
@@ -25,7 +25,7 @@ interface Props {
   day: DayRecord;
   days: Record<string, DayRecord>;
   tasks: LifeTask[];
-  phases: Record<string, Phase>;
+  menstrualRecords: MenstrualRecord[];
   journals: JournalEntry[];
   habitItems: ConfigItem[];
   onDate: (date: string) => void;
@@ -33,7 +33,8 @@ interface Props {
   onDay: (day: DayRecord) => void;
   onTasks: (tasks: LifeTask[]) => void;
   onJournals: (items: JournalEntry[]) => void;
-  onPhase: (date: string, phase: Phase) => void;
+  onMarkPeriodStart: (date: string) => void;
+  onMarkPeriodEnd: (date: string) => void;
   openTask: (start: string, end: string) => void;
   notify: (text: string) => void;
 }
@@ -44,7 +45,7 @@ export function DailyPage(props: Props) {
     day,
     days,
     tasks,
-    phases,
+    menstrualRecords,
     journals,
     habitItems,
     onDate,
@@ -52,7 +53,8 @@ export function DailyPage(props: Props) {
     onDay,
     onTasks,
     onJournals,
-    onPhase,
+    onMarkPeriodStart,
+    onMarkPeriodEnd,
     openTask,
     notify,
   } = props;
@@ -87,10 +89,11 @@ export function DailyPage(props: Props) {
         tasks={tasks}
         week={week}
         selectedDate={date}
-        phasesByDate={phases}
+        menstrualRecords={menstrualRecords}
         onWeekChange={onWeek}
         onSelectDate={onDate}
-        onPhase={onPhase}
+        onMarkStart={onMarkPeriodStart}
+        onMarkEnd={onMarkPeriodEnd}
         onTasks={onTasks}
         openTask={openTask}
       />

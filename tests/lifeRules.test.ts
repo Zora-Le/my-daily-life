@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { normalizeLifeState } from '../src/hooks/lifeSchema.ts';
 import {
+  cycleDayInfo,
+  estimatedCycleDays,
+  markPeriodEnd,
+  markPeriodStart,
+} from '../src/lib/cycleRules.ts';
+import {
   calendarCells,
   createMoneyTransaction,
   createSavingsIsland,
@@ -150,3 +156,51 @@ assert.equal(renamedIslands[0].displayName, '旅行基金');
 assert.equal(renamedIslands[0].id, 'stable-id');
 assert.equal(deleteSavingsIsland(renamedIslands, 'stable-id').length, 0);
 console.log('lifeRules assertions passed');
+
+// 生理周期：默认经期、手动结束、预测规则与旧数据兼容。
+
+const defaultPeriod = markPeriodStart([], '2026-01-01');
+assert.deepEqual(defaultPeriod, [{ start: '2026-01-01', end: '2026-01-05' }]);
+assert.equal(cycleDayInfo('2026-01-05', defaultPeriod)?.predicted, false);
+
+const manuallyEnded = markPeriodEnd(defaultPeriod, '2026-01-03');
+assert.deepEqual(manuallyEnded, [
+  { start: '2026-01-01', end: '2026-01-03', manualEnd: true },
+]);
+assert.equal(cycleDayInfo('2026-01-04', manuallyEnded)?.phase, '安全期');
+
+assert.equal(estimatedCycleDays(defaultPeriod), 28);
+assert.deepEqual(cycleDayInfo('2026-01-29', defaultPeriod), {
+  phase: '月经期',
+  predicted: true,
+  recordStart: '2026-01-29',
+});
+
+const twoCycles = [
+  { start: '2026-01-01', end: '2026-01-05' },
+  { start: '2026-01-31', end: '2026-02-04' },
+];
+assert.equal(estimatedCycleDays(twoCycles), 30);
+assert.equal(cycleDayInfo('2026-03-02', twoCycles)?.phase, '月经期');
+assert.equal(cycleDayInfo('2026-03-02', twoCycles)?.predicted, true);
+
+const fourCycles = [
+  { start: '2026-01-01', end: '2026-01-05' },
+  { start: '2026-01-29', end: '2026-02-02' },
+  { start: '2026-02-28', end: '2026-03-04' },
+  { start: '2026-03-29', end: '2026-04-02' },
+];
+assert.equal(estimatedCycleDays(fourCycles), 29); // 最近 3 个间隔：28、30、29。
+
+assert.equal(cycleDayInfo('2026-01-14', defaultPeriod)?.phase, '排卵期');
+assert.equal(cycleDayInfo('2026-01-18', defaultPeriod)?.phase, '排卵期');
+assert.equal(cycleDayInfo('2026-01-13', defaultPeriod)?.phase, '安全期');
+assert.equal(cycleDayInfo('2026-01-19', defaultPeriod)?.phase, '安全期');
+
+const oldState = normalizeLifeState({
+  version: 2,
+  phases: { '2026-01-02': '黄体期' },
+});
+assert.deepEqual(oldState.menstrualRecords, []);
+assert.equal(oldState.phases['2026-01-02'], '黄体期');
+console.log('cycleRules assertions passed');
