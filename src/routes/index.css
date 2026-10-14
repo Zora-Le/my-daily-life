@@ -3897,12 +3897,16 @@ svg {
   max-height: calc(100vh - 56px);
   object-fit: contain;
 }
-.progress-group-title {
-  margin: 0 0 9px 2px;
-  color: #727b78;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: .08em;
+.progress-module-title {
+  margin: 0 0 14px;
+  color: var(--ink);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: .02em;
+}
+.section-heading .progress-module-title {
+  margin: 0;
 }
 .progress-checkin-grid {
   display: grid;
@@ -4336,23 +4340,25 @@ svg {
 
 /* Configurable savings islands */
 .savings-card.narrow {
-  width: min(84%, 680px);
-  max-width: 680px;
+  width: min(78%, 620px);
+  max-width: 620px;
   margin: 3px auto 0;
-  padding: 16px;
+  padding: 18px;
 }
 .savings-card .island-map {
   height: auto;
-  min-height: 112px;
+  min-height: 235px;
   padding: 10px 14px;
   overflow: hidden;
 }
 .island-list {
   position: relative;
   z-index: 2;
+  min-height: 215px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
   gap: 10px;
+  align-content: center;
   align-items: center;
 }
 .island-list .paper-island {
@@ -4458,7 +4464,7 @@ svg {
 
 @media (max-width: 430px) {
   .savings-card.narrow {
-    width: calc(100% - 48px);
+    width: 78%;
   }
   .savings-card .island-map {
     padding: 10px;

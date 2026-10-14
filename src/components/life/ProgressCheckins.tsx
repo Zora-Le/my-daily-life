@@ -102,7 +102,7 @@ export function ProgressCheckins({ items, records, onChange }: Props) {
     <section className="life-section progress-checkin-section">
       {englishItems.length > 0 && (
         <div className="progress-group">
-          <h2 className="progress-group-title">每日英语</h2>
+          <h2 className="progress-module-title">每日英语</h2>
           <div className="progress-checkin-grid">
             {englishItems.map(renderCard)}
           </div>

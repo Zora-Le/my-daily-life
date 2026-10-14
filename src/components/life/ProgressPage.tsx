@@ -101,7 +101,7 @@ export function ProgressPage({
       />
       <section className="life-section bookshelf-section">
         <div className="section-heading">
-          <h2>每日阅读</h2>
+          <h2 className="progress-module-title">每日阅读</h2>
           <button
             className="outline-action"
             onClick={() => setShowFinished(true)}

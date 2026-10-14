@@ -70,7 +70,7 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
       <div className="section-heading money-daily-heading">
         <div>
           <span className="overline">DAILY MONEY</span>
-          <h2>日支出收入</h2>
+          <h2>每日记账</h2>
         </div>
       </div>
       <div className="calendar-month-head">
