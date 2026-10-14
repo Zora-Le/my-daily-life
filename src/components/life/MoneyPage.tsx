@@ -4,11 +4,15 @@ import type {
   PendingExpense,
 } from '@/hooks/useLifeStore';
 import {
+  createSavingsIsland,
+  deleteSavingsIsland,
   formatCents,
   monthlyTransactionSummary,
+  renameSavingsIsland,
   summarizeTransactions,
 } from '@/lib/lifeRules';
 import { safeCalculate } from '@/lib/lifeUtils';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import {
   Bar,
@@ -21,6 +25,7 @@ import {
 } from 'recharts';
 import { MoneyCalendar } from './MoneyCalendar';
 import { PendingExpenses } from './PendingExpenses';
+import { SavingsIsland } from './SavingsIsland';
 
 type Saving = LifeState['savings'][number];
 interface Props {
@@ -42,22 +47,32 @@ export function MoneyPage({
   onPendingExpenses,
   notify,
 }: Props) {
-  const [editing, setEditing] = useState<string | null>(null);
-  const [draft, setDraft] = useState('');
-  const commitSaving = (item: Saving) => {
+  const [editingName, setEditingName] = useState<string | null>(null);
+  const commitSaving = (item: Saving, expression: string) => {
     try {
-      const value = safeCalculate(draft);
+      const value = safeCalculate(expression);
       onSavings(
         savings.map(saving =>
           saving.id === item.id
-            ? { ...saving, expression: draft, value }
+            ? {
+                ...saving,
+                expression,
+                value,
+                updatedAt: new Date().toISOString(),
+              }
             : saving,
         ),
       );
-      setEditing(null);
+      return true;
     } catch (error) {
       notify((error as Error).message);
+      return false;
     }
+  };
+  const addIsland = () => {
+    const id = `island-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+    onSavings([...savings, createSavingsIsland(id, savings.length + 1)]);
+    setEditingName(id);
   };
   const total = savings.reduce((sum, item) => sum + item.value, 0);
   const currentMonth = new Date().toISOString().slice(0, 7);
@@ -81,32 +96,29 @@ export function MoneyPage({
         <div className="island-map">
           <div className="wave wave-one" />
           <div className="wave wave-two" />
-          {savings.map((item, index) => (
-            <article
-              className={`paper-island island-${['one', 'two', 'three'][index]}`}
-              key={item.id}
-              onClick={() => {
-                setEditing(item.id);
-                setDraft(item.expression);
-              }}
-            >
-              {editing === item.id ? (
-                <input
-                  value={draft}
-                  inputMode="decimal"
-                  onChange={event => setDraft(event.target.value)}
-                  onBlur={() => commitSaving(item)}
-                  onKeyDown={event =>
-                    event.key === 'Enter' && event.currentTarget.blur()
-                  }
-                  onClick={event => event.stopPropagation()}
-                />
-              ) : (
-                <b>¥ {item.value.toLocaleString()}</b>
-              )}
-              <span>{item.detail}</span>
-            </article>
-          ))}
+          <div className="island-list">
+            {savings.map(item => (
+              <SavingsIsland
+                item={item}
+                key={item.id}
+                editingName={editingName === item.id}
+                onEditingName={active =>
+                  setEditingName(active ? item.id : null)
+                }
+                onName={displayName =>
+                  onSavings(renameSavingsIsland(savings, item.id, displayName))
+                }
+                onAmount={expression => commitSaving(item, expression)}
+                onDelete={() =>
+                  onSavings(deleteSavingsIsland(savings, item.id))
+                }
+              />
+            ))}
+            <button className="add-island" onClick={addIsland}>
+              <Plus size={15} />
+              添加岛屿
+            </button>
+          </div>
         </div>
         <p className="savings-total">
           总储蓄 <strong>{total.toLocaleString()}</strong> 元
@@ -116,11 +128,6 @@ export function MoneyPage({
       <MoneyCalendar
         transactions={transactions}
         onChange={onTransactions}
-        notify={notify}
-      />
-      <PendingExpenses
-        items={pendingExpenses}
-        onChange={onPendingExpenses}
         notify={notify}
       />
 
@@ -193,6 +200,12 @@ export function MoneyPage({
           </p>
         </div>
       </section>
+
+      <PendingExpenses
+        items={pendingExpenses}
+        onChange={onPendingExpenses}
+        notify={notify}
+      />
     </>
   );
 }

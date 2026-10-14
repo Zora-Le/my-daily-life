@@ -71,6 +71,14 @@ export type PendingExpense = {
   name: string;
   amountCents: number;
 };
+export type SavingsIsland = {
+  id: string;
+  displayName: string;
+  detail: string;
+  expression: string;
+  value: number;
+  updatedAt?: string;
+};
 export type LifeState = {
   version: 2;
   days: Record<string, DayRecord>;
@@ -80,13 +88,7 @@ export type LifeState = {
   notes: ReadingNote[];
   progressText: string;
   journals: JournalEntry[];
-  savings: {
-    id: string;
-    name: string;
-    detail: string;
-    expression: string;
-    value: number;
-  }[];
+  savings: SavingsIsland[];
   monthlyMoney: MonthlyMoney[];
   moneyTransactions: MoneyTransaction[];
   pendingExpenses: PendingExpense[];
@@ -144,6 +146,30 @@ export const emptyDay = (): DayRecord => ({
   habits: { 'habit-cardio': false, 'habit-strength': false },
 });
 
+export const DEFAULT_SAVINGS_ISLANDS: SavingsIsland[] = [
+  {
+    id: 'cash',
+    displayName: '日常账户',
+    detail: '零钱通 · E卡通 · 现金',
+    expression: '=18620',
+    value: 18620,
+  },
+  {
+    id: 'bank',
+    displayName: '银行卡',
+    detail: '工商 · 中国 · 招商',
+    expression: '=53800',
+    value: 53800,
+  },
+  {
+    id: 'ali',
+    displayName: '支付宝',
+    detail: '支付宝',
+    expression: '=9460',
+    value: 9460,
+  },
+];
+
 export const initialState: LifeState = {
   version: 2,
   days: {},
@@ -161,29 +187,7 @@ export const initialState: LifeState = {
   notes: [],
   progressText: '把今天学到的一点点，慢慢积成自己的光。',
   journals: [],
-  savings: [
-    {
-      id: 'cash',
-      name: '日常账户',
-      detail: '零钱通 · E卡通 · 现金',
-      expression: '=18620',
-      value: 18620,
-    },
-    {
-      id: 'bank',
-      name: '银行卡',
-      detail: '工商 · 中国 · 招商',
-      expression: '=53800',
-      value: 53800,
-    },
-    {
-      id: 'ali',
-      name: '支付宝',
-      detail: '支付宝',
-      expression: '=9460',
-      value: 9460,
-    },
-  ],
+  savings: DEFAULT_SAVINGS_ISLANDS,
   monthlyMoney: [],
   moneyTransactions: [],
   pendingExpenses: [],
@@ -240,7 +244,100 @@ function normalizeDay(day: Partial<DayRecord>): DayRecord {
   };
 }
 
-export function normalizeLifeState(parsed: Partial<LifeState>): LifeState {
+function savingsId(value: unknown, index: number) {
+  const id = String(value ?? '').trim();
+  return id || `island-${index + 1}`;
+}
+
+function normalizeSavingsItem(
+  raw: unknown,
+  id: string,
+  fallbackName: string,
+): SavingsIsland {
+  const item =
+    raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const numericRaw = typeof raw === 'number' ? raw : undefined;
+  const expressionValue =
+    item.expression ??
+    item.formula ??
+    item.input ??
+    (typeof raw === 'string' ? raw : undefined);
+  const expressionNumber =
+    typeof expressionValue === 'string' &&
+    /^=?\d+(?:\.\d+)?$/.test(expressionValue)
+      ? Number(expressionValue.replace(/^=/, ''))
+      : undefined;
+  const value = Number(
+    item.value ??
+      item.amount ??
+      item.total ??
+      numericRaw ??
+      expressionNumber ??
+      0,
+  );
+  return {
+    id,
+    displayName: String(
+      item.displayName ?? item.name ?? item.title ?? fallbackName,
+    ),
+    detail: String(item.detail ?? item.description ?? ''),
+    expression:
+      typeof expressionValue === 'string'
+        ? expressionValue
+        : `=${Number.isFinite(value) ? value : 0}`,
+    value: Number.isFinite(value) ? value : 0,
+    ...(typeof item.updatedAt === 'string'
+      ? { updatedAt: item.updatedAt }
+      : {}),
+  };
+}
+
+export function normalizeSavings(
+  savings: unknown,
+  platformSavings?: unknown,
+): SavingsIsland[] {
+  if (Array.isArray(savings)) {
+    return savings.map((item, index) => {
+      const raw =
+        item && typeof item === 'object'
+          ? (item as Record<string, unknown>)
+          : {};
+      return normalizeSavingsItem(
+        item,
+        savingsId(raw.id, index),
+        `储蓄岛 ${index + 1}`,
+      );
+    });
+  }
+  const legacyObject =
+    platformSavings && typeof platformSavings === 'object'
+      ? platformSavings
+      : savings && typeof savings === 'object'
+        ? savings
+        : null;
+  if (legacyObject) {
+    return Object.entries(legacyObject as Record<string, unknown>).map(
+      ([key, item], index) => {
+        const fallback = DEFAULT_SAVINGS_ISLANDS.find(
+          value => value.id === key,
+        );
+        const normalized = normalizeSavingsItem(
+          item,
+          key,
+          fallback?.displayName ?? key ?? `储蓄岛 ${index + 1}`,
+        );
+        return normalized.detail || !fallback
+          ? normalized
+          : { ...normalized, detail: fallback.detail };
+      },
+    );
+  }
+  return DEFAULT_SAVINGS_ISLANDS.map(item => ({ ...item }));
+}
+
+type LegacyLifeState = Partial<LifeState> & { platformSavings?: unknown };
+
+export function normalizeLifeState(parsed: LegacyLifeState): LifeState {
   const days = Object.fromEntries(
     Object.entries(parsed.days ?? {}).map(([key, day]) => [
       key,
@@ -261,6 +358,7 @@ export function normalizeLifeState(parsed: Partial<LifeState>): LifeState {
     version: 2,
     days,
     journals: Array.isArray(parsed.journals) ? parsed.journals : [],
+    savings: normalizeSavings(parsed.savings, parsed.platformSavings),
     monthlyMoney: Array.isArray(parsed.monthlyMoney) ? parsed.monthlyMoney : [],
     moneyTransactions: transactions,
     pendingExpenses: Array.isArray(parsed.pendingExpenses)

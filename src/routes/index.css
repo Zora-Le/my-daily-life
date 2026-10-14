@@ -937,7 +937,7 @@ svg {
   border: 1px solid rgba(110, 119, 112, 0.2);
   background: #eeeadc;
   box-shadow: 0 4px 0 #d9ded5;
-  color: #5f665f;
+  color: #4f5a53;
   text-align: center;
   animation: island-breathe 5s ease-in-out infinite;
 }
@@ -4314,4 +4314,151 @@ svg {
 .reward-card small {
   color: #766f66;
   font-size: 8px;
+}
+
+/* Configurable savings islands */
+.savings-card.narrow {
+  width: min(84%, 680px);
+  max-width: 680px;
+  margin: 3px auto 0;
+  padding: 16px;
+}
+.savings-card .island-map {
+  height: auto;
+  min-height: 156px;
+  padding: 18px 14px;
+  overflow: hidden;
+}
+.island-list {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 14px 10px;
+  align-items: stretch;
+}
+.island-list .paper-island {
+  position: relative;
+  inset: auto;
+  width: auto;
+  min-width: 0;
+  height: 92px;
+  padding: 22px 9px 16px;
+  border-radius: 48% 52% 45% 55%;
+  animation-duration: 5s;
+}
+.island-list .paper-island:nth-child(3n + 2) {
+  border-radius: 53% 47% 55% 45%;
+  background: #e6e3d5;
+  animation-delay: -2s;
+}
+.island-list .paper-island:nth-child(3n) {
+  border-radius: 56% 44% 49% 51%;
+  background: #eee4d9;
+  animation-delay: -3s;
+}
+.island-name {
+  max-width: 86%;
+  margin-bottom: 3px;
+}
+.island-name-button,
+.island-amount-button {
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.island-name-button {
+  font-size: 8px;
+  text-decoration: underline dotted rgba(95, 102, 95, 0.45);
+  text-underline-offset: 3px;
+}
+.island-amount-button {
+  font-family: var(--serif);
+  font-size: 14px;
+}
+.paper-island .island-name input,
+.paper-island .island-amount-input {
+  width: 100%;
+  height: 24px;
+  padding: 0 5px;
+  border: 1px solid #aeb8b1;
+  border-radius: 7px;
+  background: #fff;
+  font-size: 9px;
+  text-align: center;
+}
+.paper-island > span {
+  max-width: 88%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.island-delete {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  width: 36px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.48);
+  color: #858b85;
+  touch-action: none;
+}
+.island-delete span {
+  margin: 0;
+  font-size: 5px;
+}
+.island-delete::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background: #b77c72;
+}
+.island-delete.holding::after {
+  width: 100%;
+  transition: width .9s linear;
+}
+.add-island {
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px dashed #aebbb5;
+  border-radius: 45% 55% 48% 52%;
+  background: rgba(255, 255, 255, 0.42);
+  color: #68766f;
+  font-size: 9px;
+}
+.savings-card .savings-total {
+  position: static;
+  margin: 12px 2px 0;
+  text-align: right;
+}
+
+@media (max-width: 430px) {
+  .savings-card.narrow {
+    width: calc(100% - 48px);
+  }
+  .savings-card .island-map {
+    padding: 16px 10px;
+  }
+  .island-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

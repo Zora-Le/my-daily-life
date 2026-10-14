@@ -2,6 +2,7 @@ import type {
   ConfigItem,
   MoneyTransaction,
   ProgressRecord,
+  SavingsIsland,
 } from '@/hooks/lifeSchema';
 
 export function parseMoneyToCents(raw: string): number {
@@ -72,6 +73,48 @@ export function monthlyTransactionSummary(
     ...totals,
   }));
 }
+
+export function calendarCells(month: string) {
+  const [year, monthNumber] = month.split('-').map(Number);
+  const firstWeekday = new Date(year, monthNumber - 1, 1).getDay();
+  const days = new Date(year, monthNumber, 0).getDate();
+  const cellCount = Math.ceil((firstWeekday + days) / 7) * 7;
+  return Array.from({ length: cellCount }, (_, position) => {
+    const day = position - firstWeekday + 1;
+    return {
+      key: `${month}-cell-${position - firstWeekday}`,
+      day: day > 0 && day <= days ? day : null,
+    };
+  });
+}
+
+export function createSavingsIsland(
+  id: string,
+  position: number,
+): SavingsIsland {
+  return {
+    id,
+    displayName: `储蓄岛 ${position}`,
+    detail: '',
+    expression: '=0',
+    value: 0,
+  };
+}
+
+export function renameSavingsIsland(
+  items: SavingsIsland[],
+  id: string,
+  displayName: string,
+) {
+  const nextName = displayName.trim();
+  if (!nextName) return items;
+  return items.map(item =>
+    item.id === id ? { ...item, displayName: nextName } : item,
+  );
+}
+
+export const deleteSavingsIsland = (items: SavingsIsland[], id: string) =>
+  items.filter(item => item.id !== id);
 
 export function isRewardUnlocked(
   items: ConfigItem[],

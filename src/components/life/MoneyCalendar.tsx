@@ -1,5 +1,6 @@
 import type { MoneyTransaction } from '@/hooks/useLifeStore';
 import {
+  calendarCells,
   createMoneyTransaction,
   formatCents,
   summarizeTransactions,
@@ -35,15 +36,7 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
     return map;
   }, [transactions]);
   const [year, monthNumber] = month.split('-').map(Number);
-  const firstWeekday = new Date(year, monthNumber - 1, 1).getDay();
-  const days = new Date(year, monthNumber, 0).getDate();
-  const cells = Array.from({ length: 42 }, (_, position) => {
-    const day = position - firstWeekday + 1;
-    return {
-      key: `${month}-cell-${position - firstWeekday}`,
-      day: day > 0 && day <= days ? day : null,
-    };
-  });
+  const cells = calendarCells(month);
   const move = (offset: number) => {
     const next = new Date(year, monthNumber - 1 + offset, 1);
     const value = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`;
