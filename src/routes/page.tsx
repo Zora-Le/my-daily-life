@@ -4,8 +4,13 @@ import { MoneyPage } from '@/components/life/MoneyPage';
 import { ProgressPage } from '@/components/life/ProgressPage';
 import { RewardsPage } from '@/components/life/RewardsPage';
 import { SettingsPage } from '@/components/life/SettingsPage';
-import type { LifeTask } from '@/hooks/useLifeStore';
+import type {
+  LifeTask,
+  MoneyTransaction,
+  PendingExpense,
+} from '@/hooks/useLifeStore';
 import { emptyDay, useLifeStore } from '@/hooks/useLifeStore';
+import { isRewardUnlocked } from '@/lib/lifeRules';
 import { TODAY, weekStart } from '@/lib/lifeUtils';
 import { CalendarDays, Gift, Settings, WalletCards, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -48,11 +53,40 @@ export default function Page() {
   const [week, setWeek] = useState(weekStart(TODAY));
   const [draft, setDraft] = useState<TaskDraft | null>(null);
   const [toast, setToast] = useState('');
+  const previewMode =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('preview') === 'complete';
   const notify = (text: string) => {
     setToast(text);
     window.setTimeout(() => setToast(''), 2200);
   };
-  const day = state.days[date] ?? emptyDay();
+  const storedDay = state.days[date] ?? emptyDay();
+  const previewImage =
+    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120"%3E%3Crect width="160" height="120" fill="%23d9cdb8"/%3E%3Ccircle cx="80" cy="58" r="38" fill="%23f7f1e4"/%3E%3Cpath d="M48 62h64" stroke="%23869b91" stroke-width="8"/%3E%3C/svg%3E';
+  const day = previewMode
+    ? {
+        ...storedDay,
+        meals: Object.fromEntries(
+          Object.entries(storedDay.meals).map(([key, meal]) => [
+            key,
+            {
+              ...meal,
+              text: meal.text || '今日好好吃饭',
+              images: [previewImage, previewImage],
+            },
+          ]),
+        ) as typeof storedDay.meals,
+        progress: Object.fromEntries(
+          state.progressItems.map(item => [
+            item.id,
+            {
+              planned: storedDay.progress[item.id]?.planned ?? 20,
+              completed: true,
+            },
+          ]),
+        ),
+      }
+    : storedDay;
   const title = useMemo(
     () =>
       ({
@@ -87,14 +121,45 @@ export default function Page() {
     setDraft(null);
     notify('任务已加入日历');
   };
-  const dayTasks = state.tasks.filter(
-    task => task.start <= date && task.end >= date,
-  );
+  const previewTransactions: MoneyTransaction[] = previewMode
+    ? [
+        {
+          id: 901,
+          date: TODAY,
+          kind: 'expense',
+          amountCents: 2860,
+          detail: '午餐',
+        },
+        {
+          id: 902,
+          date: TODAY,
+          kind: 'income',
+          amountCents: 320050,
+          detail: '项目收入',
+        },
+        {
+          id: 903,
+          date: TODAY,
+          kind: 'expense',
+          amountCents: 1250,
+          detail: '咖啡',
+        },
+        ...state.moneyTransactions,
+      ]
+    : state.moneyTransactions;
+  const previewPending: PendingExpense[] = previewMode
+    ? [
+        { id: 911, name: '周末花束', amountCents: 6800 },
+        { id: 912, name: '下月车票', amountCents: 24650 },
+        ...state.pendingExpenses,
+      ]
+    : state.pendingExpenses;
   const unlocked =
-    dayTasks.length > 0 &&
-    dayTasks.filter(task => task.done).length >=
-      Math.ceil(dayTasks.length * 0.6) &&
-    Object.values(day.meals).every(meal => meal.text || meal.image);
+    previewMode ||
+    isRewardUnlocked(
+      state.progressItems,
+      (state.days[TODAY] ?? emptyDay()).progress,
+    );
   const nav: { key: PageKey; label: string; icon: React.ReactNode }[] = [
     { key: 'daily', label: '日常', icon: <CalendarDays /> },
     { key: 'progress', label: '进步', icon: <BookIcon /> },
@@ -123,6 +188,7 @@ export default function Page() {
               tasks={state.tasks}
               phases={state.phases}
               journals={state.journals}
+              habitItems={state.habitItems}
               onDate={setDate}
               onWeek={setWeek}
               onDay={next => updateDay(date, () => next)}
@@ -149,6 +215,7 @@ export default function Page() {
               books={state.books}
               notes={state.notes}
               progressText={state.progressText}
+              progressItems={state.progressItems}
               onDay={next => updateDay(date, () => next)}
               onProgressText={progressText =>
                 update(current => ({ ...current, progressText }))
@@ -161,13 +228,13 @@ export default function Page() {
           {page === 'money' && (
             <MoneyPage
               savings={state.savings}
-              monthlyMoney={state.monthlyMoney}
-              transactions={state.moneyTransactions}
+              transactions={previewTransactions}
+              pendingExpenses={previewPending}
               onTransactions={moneyTransactions =>
                 update(current => ({ ...current, moneyTransactions }))
               }
-              onMonthlyMoney={monthlyMoney =>
-                update(current => ({ ...current, monthlyMoney }))
+              onPendingExpenses={pendingExpenses =>
+                update(current => ({ ...current, pendingExpenses }))
               }
               onSavings={savings =>
                 update(current => ({ ...current, savings }))
@@ -201,6 +268,12 @@ export default function Page() {
             <SettingsPage
               state={state}
               onImport={importState}
+              onProgressItems={progressItems =>
+                update(current => ({ ...current, progressItems }))
+              }
+              onHabitItems={habitItems =>
+                update(current => ({ ...current, habitItems }))
+              }
               notify={notify}
             />
           )}

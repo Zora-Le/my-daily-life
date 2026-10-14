@@ -1,7 +1,13 @@
-import type { DayRecord, ReadingItem, ReadingNote } from '@/hooks/useLifeStore';
+import type {
+  ConfigItem,
+  DayRecord,
+  ReadingItem,
+  ReadingNote,
+} from '@/hooks/useLifeStore';
 import { formatShort } from '@/lib/lifeUtils';
-import { BookOpen, Headphones, Mic2, Plus, X } from 'lucide-react';
+import { BookOpen, Plus, X } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { ProgressCheckins } from './ProgressCheckins';
 
 interface Props {
   date: string;
@@ -9,6 +15,7 @@ interface Props {
   books: ReadingItem[];
   notes: ReadingNote[];
   progressText: string;
+  progressItems: ConfigItem[];
   onDay: (day: DayRecord) => void;
   onProgressText: (text: string) => void;
   onBooks: (items: ReadingItem[]) => void;
@@ -23,6 +30,7 @@ export function ProgressPage({
   books,
   notes,
   progressText,
+  progressItems,
   onDay,
   onProgressText,
   onBooks,
@@ -38,12 +46,6 @@ export function ProgressPage({
   const [noteText, setNoteText] = useState('');
   const [previewNote, setPreviewNote] = useState<ReadingNote | null>(null);
   const holdTimer = useRef<number | null>(null);
-  const english = day.english;
-  const setMinutes = (key: 'listening' | 'speaking', value: number) =>
-    onDay({
-      ...day,
-      english: { ...english, [key]: Math.max(0, Math.min(999, value || 0)) },
-    });
   const waiting = books.filter(book => !book.finishedAt);
   const finished = books.filter(book => book.finishedAt);
   const clearHold = () => {
@@ -92,38 +94,11 @@ export function ProgressPage({
           aria-label="进步页自定义文字"
         />
       </section>
-      <section className="life-section">
-        <div className="english-cards">
-          {[
-            { key: 'listening' as const, name: '听力', Icon: Headphones },
-            { key: 'speaking' as const, name: '口语', Icon: Mic2 },
-          ].map(({ key, name, Icon }) => (
-            <article className={english[key] > 0 ? 'active' : ''} key={key}>
-              <Icon />
-              <b>{name}</b>
-              <label>
-                <input
-                  inputMode="numeric"
-                  type="number"
-                  min="0"
-                  value={english[key]}
-                  onChange={event =>
-                    setMinutes(key, Number(event.target.value))
-                  }
-                />
-                <span>分钟</span>
-              </label>
-              <div>
-                {[10, 20, 45].map(value => (
-                  <button key={value} onClick={() => setMinutes(key, value)}>
-                    {value}
-                  </button>
-                ))}
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+      <ProgressCheckins
+        items={progressItems}
+        records={day.progress}
+        onChange={progress => onDay({ ...day, progress })}
+      />
       <section className="life-section bookshelf-section">
         <div className="section-heading">
           <h2>每日阅读</h2>

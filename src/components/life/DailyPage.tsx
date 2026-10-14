@@ -1,15 +1,16 @@
 import type {
+  ConfigItem,
   DayRecord,
   JournalEntry,
   LifeTask,
   Meal,
 } from '@/hooks/useLifeStore';
-import { TODAY, compressImage, formatShort, weekStart } from '@/lib/lifeUtils';
-import { Camera, RotateCcw, X } from 'lucide-react';
-import { useRef } from 'react';
+import { TODAY, formatShort, weekStart } from '@/lib/lifeUtils';
+import { RotateCcw } from 'lucide-react';
+import { HabitCheckins } from './HabitCheckins';
 import { JournalDrawer } from './JournalDrawer';
 import type { Phase } from './LineArt';
-import { SportIcon } from './LineArt';
+import { MealGallery } from './MealGallery';
 import { MoodPanel } from './MoodPanel';
 import { WeekPlanner } from './WeekPlanner';
 
@@ -26,6 +27,7 @@ interface Props {
   tasks: LifeTask[];
   phases: Record<string, Phase>;
   journals: JournalEntry[];
+  habitItems: ConfigItem[];
   onDate: (date: string) => void;
   onWeek: (date: string) => void;
   onDay: (day: DayRecord) => void;
@@ -44,6 +46,7 @@ export function DailyPage(props: Props) {
     tasks,
     phases,
     journals,
+    habitItems,
     onDate,
     onWeek,
     onDay,
@@ -53,7 +56,6 @@ export function DailyPage(props: Props) {
     openTask,
     notify,
   } = props;
-  const uploads = useRef<Record<string, HTMLInputElement | null>>({});
   const setMeal = (key: keyof DayRecord['meals'], patch: Partial<Meal>) =>
     onDay({
       ...day,
@@ -92,7 +94,7 @@ export function DailyPage(props: Props) {
         onTasks={onTasks}
         openTask={openTask}
       />
-      <section className="life-section">
+      <section className="life-section diet-section">
         <div className="section-heading diet-heading">
           <div>
             <h2>daily diet</h2>
@@ -114,97 +116,41 @@ export function DailyPage(props: Props) {
           </label>
         </div>
         <div className="meal-row">
-          {mealMeta.map(({ key, label }) => (
-            <article
-              className={
-                day.meals[key].text || day.meals[key].image ? 'recorded' : ''
-              }
-              key={key}
-            >
-              <div className="meal-top">
-                <span>{label}</span>
-                {day.meals[key].image && (
-                  <button
-                    className="mini-remove"
-                    onClick={() => setMeal(key, { image: undefined })}
-                  >
-                    <X size={10} />
-                  </button>
-                )}
-              </div>
-              <textarea
-                value={day.meals[key].text}
-                onChange={event => setMeal(key, { text: event.target.value })}
-                placeholder="吃了什么？"
-                rows={2}
-              />
-              {day.meals[key].image ? (
-                <button
-                  className="meal-thumb"
-                  onClick={() => uploads.current[key]?.click()}
-                >
-                  <img src={day.meals[key].image} alt={`${label}记录`} />
-                </button>
-              ) : (
-                <button
-                  className="meal-add"
-                  onClick={() => uploads.current[key]?.click()}
-                >
-                  <Camera size={15} />
-                  <small>添图</small>
-                </button>
-              )}
-              <input
-                ref={node => {
-                  uploads.current[key] = node;
-                }}
-                hidden
-                type="file"
-                accept="image/*"
-                onChange={async event => {
-                  const file = event.target.files?.[0];
-                  if (!file) return;
-                  try {
-                    setMeal(key, {
-                      image: await compressImage(file, 520, 0.65),
-                    });
-                    notify('图片已压缩并保存');
-                  } catch (error) {
-                    notify((error as Error).message);
-                  }
-                }}
-              />
-            </article>
-          ))}
+          {mealMeta.map(({ key, label }) => {
+            const meal = day.meals[key];
+            return (
+              <article
+                className={meal.text || meal.images.length ? 'recorded' : ''}
+                key={key}
+              >
+                <div className="meal-top">
+                  <span>{label}</span>
+                  <small>
+                    {meal.images.length ? `${meal.images.length} 张` : ''}
+                  </small>
+                </div>
+                <textarea
+                  value={meal.text}
+                  onChange={event => setMeal(key, { text: event.target.value })}
+                  placeholder="吃了什么？"
+                  rows={2}
+                />
+                <MealGallery
+                  label={label}
+                  images={meal.images}
+                  onChange={images => setMeal(key, { images })}
+                  notify={notify}
+                />
+              </article>
+            );
+          })}
         </div>
       </section>
-      <section className="life-section">
-        <div className="section-heading">
-          <h2>Exercise</h2>
-        </div>
-        <div className="exercise-list">
-          {(['strength', 'cardio'] as const).map(key => (
-            <button
-              className={`exercise-row ${day.exercise[key] ? 'completed' : ''}`}
-              key={key}
-              onClick={() =>
-                onDay({
-                  ...day,
-                  exercise: { ...day.exercise, [key]: !day.exercise[key] },
-                })
-              }
-            >
-              <span className="sport-icon">
-                <SportIcon strength={key === 'strength'} />
-              </span>
-              <span className="sport-copy">
-                <b>{key === 'strength' ? '力量' : '有氧'}</b>
-              </span>
-              <strong>{day.exercise[key] ? '已完成' : '待完成'}</strong>
-            </button>
-          ))}
-        </div>
-      </section>
+      <HabitCheckins
+        items={habitItems}
+        records={day.habits}
+        onChange={habits => onDay({ ...day, habits })}
+      />
       <MoodPanel date={date} day={day} days={days} onDay={onDay} />
       <JournalDrawer
         entries={journals}

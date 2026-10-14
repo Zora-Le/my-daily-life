@@ -1,0 +1,119 @@
+import type { MoneyTransaction } from '@/hooks/useLifeStore';
+import { formatCents, summarizeTransactions } from '@/lib/lifeRules';
+import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+
+interface Props {
+  transactions: MoneyTransaction[];
+  onDelete: (id: number) => void;
+}
+
+const monthLabel = (month: string) => {
+  const [year, value] = month.split('-');
+  return `${year} 年 ${Number(value)} 月`;
+};
+
+export function MoneyCalendar({ transactions, onDelete }: Props) {
+  const [month, setMonth] = useState(() =>
+    new Date().toISOString().slice(0, 7),
+  );
+  const [selected, setSelected] = useState(() =>
+    new Date().toISOString().slice(0, 10),
+  );
+  const byDay = useMemo(() => {
+    const map = new Map<string, MoneyTransaction[]>();
+    for (const item of transactions)
+      map.set(item.date, [...(map.get(item.date) ?? []), item]);
+    return map;
+  }, [transactions]);
+  const [year, monthNumber] = month.split('-').map(Number);
+  const firstWeekday = new Date(year, monthNumber - 1, 1).getDay();
+  const days = new Date(year, monthNumber, 0).getDate();
+  const cells = Array.from({ length: 42 }, (_, position) => {
+    const day = position - firstWeekday + 1;
+    return {
+      key: `${month}-cell-${position - firstWeekday}`,
+      day: day > 0 && day <= days ? day : null,
+    };
+  });
+  const move = (offset: number) => {
+    const next = new Date(year, monthNumber - 1 + offset, 1);
+    const value = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`;
+    setMonth(value);
+    setSelected(`${value}-01`);
+  };
+  const selectedItems = byDay.get(selected) ?? [];
+  const remove = (id: number) => {
+    if (window.confirm('删除这条收支明细？')) onDelete(id);
+  };
+  return (
+    <section className="money-calendar-section">
+      <div className="calendar-month-head">
+        <button onClick={() => move(-1)} aria-label="上个月">
+          <ChevronLeft size={17} />
+        </button>
+        <h2>{monthLabel(month)}</h2>
+        <button onClick={() => move(1)} aria-label="下个月">
+          <ChevronRight size={17} />
+        </button>
+      </div>
+      <div className="money-weekdays">
+        {['日', '一', '二', '三', '四', '五', '六'].map(item => (
+          <span key={item}>{item}</span>
+        ))}
+      </div>
+      <div className="money-calendar-grid">
+        {cells.map(cell => {
+          if (!cell.day)
+            return <span className="money-day empty" key={cell.key} />;
+          const iso = `${month}-${String(cell.day).padStart(2, '0')}`;
+          const total = summarizeTransactions(byDay.get(iso) ?? []);
+          return (
+            <button
+              className={`money-day ${selected === iso ? 'selected' : ''}`}
+              key={iso}
+              onClick={() => setSelected(iso)}
+            >
+              <b>{cell.day}</b>
+              <small className="day-income">
+                {total.income ? `+${formatCents(total.income)}` : ''}
+              </small>
+              <small className="day-expense">
+                {total.expense ? `-${formatCents(total.expense)}` : ''}
+              </small>
+            </button>
+          );
+        })}
+      </div>
+      <div className="day-transactions">
+        <div className="selected-date">
+          <b>{selected.slice(5).replace('-', ' / ')}</b>
+          <span>{selectedItems.length} 笔</span>
+        </div>
+        {selectedItems.length ? (
+          selectedItems.map(item => (
+            <div className="transaction-row" key={item.id}>
+              <i className={item.kind} />
+              <span>
+                <b>{item.detail}</b>
+                <small>{item.kind === 'income' ? '收入' : '支出'}</small>
+              </span>
+              <strong className={item.kind}>
+                {item.kind === 'income' ? '+' : '-'}¥
+                {formatCents(item.amountCents)}
+              </strong>
+              <button
+                onClick={() => remove(item.id)}
+                aria-label={`删除${item.detail}`}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))
+        ) : (
+          <p className="empty-money-day">这天还没有明细</p>
+        )}
+      </div>
+    </section>
+  );
+}
