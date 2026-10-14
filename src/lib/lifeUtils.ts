@@ -27,51 +27,6 @@ export const formatShort = (iso: string) => {
   return `${date.getMonth() + 1}月${date.getDate()}日`;
 };
 
-type SolarTerm = { name: string; month: number; c20: number; c21: number };
-const SOLAR_TERMS: SolarTerm[] = [
-  { name: '小寒', month: 1, c20: 6.11, c21: 5.4055 },
-  { name: '大寒', month: 1, c20: 20.84, c21: 20.12 },
-  { name: '立春', month: 2, c20: 4.6295, c21: 3.87 },
-  { name: '雨水', month: 2, c20: 19.4599, c21: 18.73 },
-  { name: '惊蛰', month: 3, c20: 6.3826, c21: 5.63 },
-  { name: '春分', month: 3, c20: 21.4155, c21: 20.646 },
-  { name: '清明', month: 4, c20: 5.59, c21: 4.81 },
-  { name: '谷雨', month: 4, c20: 20.888, c21: 20.1 },
-  { name: '立夏', month: 5, c20: 6.318, c21: 5.52 },
-  { name: '小满', month: 5, c20: 21.86, c21: 21.04 },
-  { name: '芒种', month: 6, c20: 6.5, c21: 5.678 },
-  { name: '夏至', month: 6, c20: 22.2, c21: 21.37 },
-  { name: '小暑', month: 7, c20: 7.928, c21: 7.108 },
-  { name: '大暑', month: 7, c20: 23.65, c21: 22.83 },
-  { name: '立秋', month: 8, c20: 8.35, c21: 7.5 },
-  { name: '处暑', month: 8, c20: 23.95, c21: 23.13 },
-  { name: '白露', month: 9, c20: 8.44, c21: 7.646 },
-  { name: '秋分', month: 9, c20: 23.822, c21: 23.042 },
-  { name: '寒露', month: 10, c20: 9.098, c21: 8.318 },
-  { name: '霜降', month: 10, c20: 24.218, c21: 23.438 },
-  { name: '立冬', month: 11, c20: 8.218, c21: 7.438 },
-  { name: '小雪', month: 11, c20: 23.08, c21: 22.36 },
-  { name: '大雪', month: 12, c20: 7.9, c21: 7.18 },
-  { name: '冬至', month: 12, c20: 22.6, c21: 21.94 },
-];
-
-export function solarTermForDate(iso: string) {
-  const date = fromIso(iso);
-  const year = date.getFullYear();
-  if (year < 1901 || year > 2100) return '';
-  const shortYear = year % 100;
-  const century = year >= 2001 ? 21 : 20;
-  const term = SOLAR_TERMS.find(item => {
-    if (item.month !== date.getMonth() + 1) return false;
-    const constant = century === 21 ? item.c21 : item.c20;
-    const leapBase = item.month < 3 ? shortYear - 1 : shortYear;
-    const day =
-      Math.floor(shortYear * 0.2422 + constant) - Math.floor(leapBase / 4);
-    return day === date.getDate();
-  });
-  return term?.name ?? '';
-}
-
 export function safeCalculate(raw: string): number {
   const source = raw.trim().replace(/^=/, '');
   if (!source || !/^[\d.+\-*/()\s]+$/.test(source))

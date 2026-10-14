@@ -4,7 +4,6 @@ import {
   addDays,
   formatShort,
   fromIso,
-  solarTermForDate,
   weekStart,
 } from '@/lib/lifeUtils';
 import {
@@ -15,7 +14,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
-import { type Phase, PhaseIcon, type Season, SeasonIcon } from './LineArt';
+import { type Phase, PhaseIcon } from './LineArt';
 
 const phases: Phase[] = ['卵泡期', '排卵期', '黄体期', '月经期'];
 const weekNames = ['一', '二', '三', '四', '五', '六', '日'];
@@ -74,16 +73,6 @@ export function WeekPlanner(props: Props) {
     [props.tasks, days.join('|')],
   );
   const laneCount = Math.max(3, ...placed.map(task => task.lane + 1));
-  const month = fromIso(props.selectedDate).getMonth() + 1;
-  const season: Season =
-    month >= 3 && month <= 5
-      ? 'spring'
-      : month >= 6 && month <= 8
-        ? 'summer'
-        : month >= 9 && month <= 11
-          ? 'autumn'
-          : 'winter';
-  const solarTerm = solarTermForDate(props.selectedDate);
   const pointerIndex = (clientX: number) => {
     const rect = trackRef.current?.getBoundingClientRect();
     return rect
@@ -111,14 +100,10 @@ export function WeekPlanner(props: Props) {
           <ChevronLeft size={16} />
         </button>
         <div className="calendar-caption">
-          <span className="calendar-season" aria-label="当季图标">
-            <CalendarDays />
-            <SeasonIcon season={season} />
-          </span>
+          <CalendarDays className="calendar-icon" aria-hidden="true" />
           <span className="overline">
             {formatShort(days[0])} — {formatShort(days[6])}
           </span>
-          {solarTerm && <b className="solar-term">{solarTerm}</b>}
         </div>
         <button
           className="week-arrow"

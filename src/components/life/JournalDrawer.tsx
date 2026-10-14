@@ -1,6 +1,6 @@
 import type { JournalEntry } from '@/hooks/useLifeStore';
 import { Feather, Send, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 export function JournalDrawer({
   entries,
@@ -17,36 +17,23 @@ export function JournalDrawer({
       : '';
   const [open, setOpen] = useState(preview === 'journal');
   const [text, setText] = useState('');
-  const [pressing, setPressing] = useState(false);
-  const timer = useRef<number | null>(null);
-  const stopPress = () => {
-    if (timer.current) window.clearTimeout(timer.current);
-    timer.current = null;
-    setPressing(false);
-  };
-  const startPress = () => {
+  const publish = () => {
     if (!text.trim()) return notify('先写下一点此刻');
-    stopPress();
-    setPressing(true);
-    timer.current = window.setTimeout(() => {
-      const next = {
-        id: Date.now(),
-        text: text.trim(),
-        createdAt: new Date().toISOString(),
-      };
-      onEntries([next, ...entries]);
-      setText('');
-      setPressing(false);
-      timer.current = null;
-      notify('这一刻已收进时间轴');
-    }, 1400);
+    const next = {
+      id: Date.now(),
+      text: text.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    onEntries([next, ...entries]);
+    setText('');
+    notify('这一刻已收进时间轴');
   };
   return (
     <>
       <button
         className="journal-handle"
         onClick={() => setOpen(true)}
-        aria-label="打开日记"
+        aria-label="打开时光日记本"
       >
         <Feather />
       </button>
@@ -59,7 +46,7 @@ export function JournalDrawer({
             <header>
               <div>
                 <span>PRIVATE TIMELINE</span>
-                <h2>只写给自己的片刻</h2>
+                <h2>时光日记本</h2>
               </div>
               <button onClick={() => setOpen(false)}>
                 <X size={18} />
@@ -71,16 +58,9 @@ export function JournalDrawer({
                 onChange={event => setText(event.target.value)}
                 placeholder="此刻想记下……"
               />
-              <button
-                className={`hold-publish ${pressing ? 'pressing' : ''}`}
-                onPointerDown={startPress}
-                onPointerUp={stopPress}
-                onPointerCancel={stopPress}
-                onPointerLeave={stopPress}
-              >
-                <i />
+              <button className="journal-publish" onClick={publish}>
                 <Send size={15} />
-                <span>按住发布</span>
+                <span>发布</span>
               </button>
             </div>
             <div className="journal-timeline">
