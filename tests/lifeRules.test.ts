@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { normalizeLifeState } from '../src/hooks/lifeSchema.ts';
 import {
+  createMoneyTransaction,
   isRewardUnlocked,
+  monthlyTransactionSummary,
   parseMoneyToCents,
   summarizeTransactions,
 } from '../src/lib/lifeRules.ts';
@@ -17,6 +19,33 @@ assert.deepEqual(
   ]),
   { income: 30, expense: 7 },
 );
+const sixMonths = monthlyTransactionSummary(
+  [
+    {
+      id: 4,
+      date: '2026-08-02',
+      kind: 'expense',
+      amountCents: 1250,
+      detail: '午餐',
+    },
+  ],
+  new Date(2026, 9, 14),
+);
+assert.deepEqual(
+  sixMonths.map(item => item.month),
+  ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10'],
+);
+assert.equal(sixMonths[0].expense, 0);
+assert.equal(sixMonths[3].expense, 1250);
+const selectedDateEntry = createMoneyTransaction(
+  '2026-09-21',
+  'income',
+  '88.06',
+  '退款',
+  99,
+);
+assert.equal(selectedDateEntry.date, '2026-09-21');
+assert.equal(selectedDateEntry.amountCents, 8806);
 const items = [
   { id: 'a', name: 'A', iconId: 'sun', unit: '分钟' },
   { id: 'b', name: 'B', iconId: 'moon', unit: '次', archivedAt: '2026-10-14' },

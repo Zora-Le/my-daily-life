@@ -34,17 +34,43 @@ export function summarizeTransactions(items: MoneyTransaction[]) {
   );
 }
 
-export function monthlyTransactionSummary(items: MoneyTransaction[]) {
+export function createMoneyTransaction(
+  date: string,
+  kind: MoneyTransaction['kind'],
+  amount: string,
+  detail: string,
+  id = Date.now(),
+): MoneyTransaction {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('记账日期无效');
+  return {
+    id,
+    date,
+    kind,
+    amountCents: parseMoneyToCents(amount),
+    detail: detail.trim() || (kind === 'income' ? '收入' : '支出'),
+  };
+}
+
+export function monthlyTransactionSummary(
+  items: MoneyTransaction[],
+  anchor = new Date(),
+) {
   const grouped = new Map<string, { income: number; expense: number }>();
+  for (let offset = 5; offset >= 0; offset -= 1) {
+    const date = new Date(anchor.getFullYear(), anchor.getMonth() - offset, 1);
+    const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    grouped.set(month, { income: 0, expense: 0 });
+  }
   for (const item of items) {
     const month = item.date.slice(0, 7);
-    const current = grouped.get(month) ?? { income: 0, expense: 0 };
+    if (!grouped.has(month)) continue;
+    const current = grouped.get(month)!;
     current[item.kind] += transactionCents(item);
-    grouped.set(month, current);
   }
-  return [...grouped.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([month, totals]) => ({ month, ...totals }));
+  return [...grouped.entries()].map(([month, totals]) => ({
+    month,
+    ...totals,
+  }));
 }
 
 export function isRewardUnlocked(

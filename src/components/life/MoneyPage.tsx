@@ -20,7 +20,6 @@ import {
   YAxis,
 } from 'recharts';
 import { MoneyCalendar } from './MoneyCalendar';
-import { MoneyQuickEntry } from './MoneyQuickEntry';
 import { PendingExpenses } from './PendingExpenses';
 
 type Saving = LifeState['savings'][number];
@@ -62,12 +61,7 @@ export function MoneyPage({
   };
   const total = savings.reduce((sum, item) => sum + item.value, 0);
   const currentMonth = new Date().toISOString().slice(0, 7);
-  const chartData = monthlyTransactionSummary(transactions);
-  if (!chartData.some(item => item.month === currentMonth)) {
-    chartData.push({ month: currentMonth, income: 0, expense: 0 });
-    chartData.sort((a, b) => a.month.localeCompare(b.month));
-  }
-  const visibleChart = chartData.slice(-6).map(item => ({
+  const visibleChart = monthlyTransactionSummary(transactions).map(item => ({
     label: `${Number(item.month.slice(5))}月`,
     income: item.income / 100,
     expense: item.expense / 100,
@@ -75,8 +69,6 @@ export function MoneyPage({
   const currentTotals = summarizeTransactions(
     transactions.filter(item => item.date.startsWith(currentMonth)),
   );
-  const removeTransaction = (id: number) =>
-    onTransactions(transactions.filter(item => item.id !== id));
   return (
     <>
       <section className="savings-card narrow">
@@ -121,9 +113,14 @@ export function MoneyPage({
         </p>
       </section>
 
-      <MoneyQuickEntry
+      <MoneyCalendar
         transactions={transactions}
         onChange={onTransactions}
+        notify={notify}
+      />
+      <PendingExpenses
+        items={pendingExpenses}
+        onChange={onPendingExpenses}
         notify={notify}
       />
 
@@ -196,13 +193,6 @@ export function MoneyPage({
           </p>
         </div>
       </section>
-
-      <MoneyCalendar transactions={transactions} onDelete={removeTransaction} />
-      <PendingExpenses
-        items={pendingExpenses}
-        onChange={onPendingExpenses}
-        notify={notify}
-      />
     </>
   );
 }

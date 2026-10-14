@@ -100,7 +100,7 @@ svg {
   height: calc(100% - 174px);
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 20px 52px;
+  padding: 0 20px 104px;
   scrollbar-width: none;
   animation: page-in .3s ease-out;
 }
@@ -3496,18 +3496,58 @@ svg {
 }
 
 /* configurable records · integer-safe finance · multi-image diet */
-.money-quick-entry {
-  margin-top: 16px;
-  padding: 16px;
-  border: 1px solid #e2ddd3;
-  border-radius: 20px;
-  background: #f6eee8;
-  transition: background .2s ease;
+.money-inline-entry {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #eeeae4;
 }
-.money-quick-entry.income {
-  background: #edf3ef;
+.money-inline-entry > small {
+  display: block;
+  margin-top: 7px;
+  color: #99958e;
+  font-size: 8px;
 }
-.money-quick-top,
+.money-inline-fields {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) 34px;
+  gap: 6px;
+  margin-top: 8px;
+}
+.money-inline-fields label,
+.money-inline-fields > input {
+  min-width: 0;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+.money-inline-fields label {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: #8b7770;
+}
+.money-inline-fields input {
+  min-width: 0;
+  width: 100%;
+  padding: 0 8px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 10px;
+}
+.money-inline-fields > button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: #8f756d;
+  color: #fff;
+}
+.money-inline-entry.income .money-inline-fields > button {
+  background: #6f8e82;
+}
+.money-kind,
 .calendar-month-head,
 .selected-date,
 .config-panel-head,
@@ -3536,60 +3576,6 @@ svg {
   background: #fff;
   box-shadow: 0 2px 8px rgba(74, 65, 57, 0.08);
   color: #5d6662;
-}
-.money-quick-top > input {
-  width: 112px;
-  height: 30px;
-  border: 0;
-  background: transparent;
-  color: #777b76;
-  font-size: 10px;
-}
-.money-amount-line {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin: 15px 0 11px;
-  color: #8b7770;
-}
-.money-amount-line span {
-  font-family: var(--serif);
-  font-size: 20px;
-}
-.money-amount-line input {
-  min-width: 0;
-  width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  font-family: var(--serif);
-  font-size: 30px;
-}
-.money-detail-line {
-  display: grid;
-  grid-template-columns: 1fr 36px;
-  gap: 8px;
-}
-.money-detail-line input {
-  min-width: 0;
-  height: 36px;
-  padding: 0 10px;
-  border: 1px solid rgba(160, 145, 135, 0.2);
-  border-radius: 11px;
-  outline: 0;
-  background: rgba(255, 255, 255, 0.62);
-  font-size: 11px;
-}
-.money-detail-line button {
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 11px;
-  background: #8f756d;
-  color: white;
-}
-.money-quick-entry.income .money-detail-line button {
-  background: #6f8e82;
 }
 .money-month-total {
   margin-top: 12px;
@@ -3620,12 +3606,15 @@ svg {
   background: #d8d4cc;
 }
 .money-calendar-section {
-  margin-top: 38px;
+  margin-top: 30px;
+}
+.money-daily-heading {
+  margin-bottom: 16px;
 }
 .calendar-month-head {
   margin-bottom: 12px;
 }
-.calendar-month-head h2 {
+.calendar-month-head h3 {
   margin: 0;
   font-family: var(--serif);
   font-size: 17px;
@@ -3659,7 +3648,7 @@ svg {
 }
 .money-day {
   min-width: 0;
-  height: 58px;
+  height: 50px;
   padding: 5px 2px;
   display: flex;
   flex-direction: column;
@@ -3907,6 +3896,7 @@ svg {
 }
 .progress-check-card {
   position: relative;
+  cursor: pointer;
   min-height: 135px;
   padding: 14px;
   border: 1px solid var(--line);
@@ -3957,14 +3947,30 @@ svg {
   background: #788f88;
   color: white;
 }
-.progress-check-card > b {
+.progress-card-main {
+  width: 100%;
+  padding: 0;
+  display: block;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  text-align: left;
+}
+.progress-card-main:focus-visible {
+  border-radius: 12px;
+  box-shadow: 0 0 0 3px rgba(112, 137, 134, 0.2);
+}
+.progress-card-main > b {
   display: block;
   margin: 11px 0 8px;
   font-size: 13px;
   font-weight: 500;
 }
 .progress-check-card label {
+  position: relative;
+  z-index: 1;
   display: flex;
+  cursor: text;
   align-items: center;
   gap: 5px;
 }
@@ -4284,24 +4290,6 @@ svg {
 .money-kind {
   margin: 0;
   border: 0;
-}
-
-.progress-card-toggle {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 100%;
-  border: 0;
-  border-radius: inherit;
-  background: transparent;
-}
-.progress-check-card > :not(.progress-card-toggle) {
-  position: relative;
-  z-index: 1;
-  pointer-events: none;
-}
-.progress-check-card > label {
-  pointer-events: auto;
 }
 
 /* 390px readability refinements */
