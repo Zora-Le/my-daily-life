@@ -1,7 +1,7 @@
 import type { MenstrualRecord } from '@/hooks/lifeSchema';
 import { addDays, fromIso } from './lifeUtils';
 
-export type CyclePhase = '月经期' | '排卵期' | '安全期';
+export type CyclePhase = '卵泡期' | '排卵期' | '黄体期' | '月经期';
 export type CycleDayInfo = {
   phase: CyclePhase;
   predicted: boolean;
@@ -56,10 +56,13 @@ export function markPeriodEnd(records: MenstrualRecord[], date: string) {
 function phaseAfterPeriod(date: string, end: string): CycleDayInfo {
   const ovulationStart = addDays(end, OVULATION_OFFSET_AFTER_END);
   const ovulationEnd = addDays(ovulationStart, OVULATION_DAYS - 1);
-  return {
-    phase: date >= ovulationStart && date <= ovulationEnd ? '排卵期' : '安全期',
-    predicted: true,
-  };
+  const phase =
+    date < ovulationStart
+      ? '卵泡期'
+      : date <= ovulationEnd
+        ? '排卵期'
+        : '黄体期';
+  return { phase, predicted: true };
 }
 
 export function cycleDayInfo(

@@ -4351,7 +4351,8 @@ svg {
 }
 .island-name {
   max-width: 86%;
-  margin-bottom: 3px;
+  margin: 0;
+  line-height: 1;
 }
 .island-name-button,
 .island-name-text,
@@ -4369,14 +4370,18 @@ svg {
 .island-name-text {
   display: block;
   font-size: 8px;
+  line-height: 1;
 }
 .island-name-button.editable {
   text-decoration: underline dotted rgba(95, 102, 95, 0.45);
   text-underline-offset: 3px;
 }
 .island-amount-button {
+  display: block;
+  flex: none;
   font-family: var(--serif);
   font-size: 14px;
+  line-height: 1.05;
 }
 .paper-island .island-name input,
 .paper-island .island-amount-input {
@@ -4391,6 +4396,9 @@ svg {
 }
 .paper-island > span {
   max-width: 88%;
+  margin-top: 1px;
+  font-size: 7px;
+  line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
@@ -4511,7 +4519,7 @@ svg {
 }
 @keyframes confirm-in {
   from {
-    transform: translateY(8px) scale(.98);
+    transform: translateY(8px) scale(0.98);
     opacity: 0;
   }
 }
@@ -4520,43 +4528,40 @@ svg {
 .cycle-marker {
   position: absolute;
   z-index: 2;
-  left: 4px;
-  top: 4px;
-  width: 22px;
-  height: 22px;
-  padding: 4px;
+  left: 3px;
+  top: 3px;
+  width: 15px;
+  height: 15px;
+  padding: 1px;
   border: 1px solid transparent;
-  border-radius: 50%;
-  background: #edf1ed;
-  color: #70867a;
+  border-radius: 5px;
+  background: transparent;
+  color: #7d8583;
+  opacity: 0.72;
 }
 .cycle-marker svg {
   width: 100%;
   height: 100%;
 }
 .cycle-marker[data-phase='月经期'] {
-  border-color: #c96f72;
-  background: #f7dddf;
-  color: #aa4f55;
+  color: #b95655;
+}
+.cycle-marker[data-phase='卵泡期'] {
+  color: #688779;
 }
 .cycle-marker[data-phase='排卵期'] {
-  border-color: #d7b85e;
-  background: #fff1bd;
-  color: #987823;
+  color: #a2812d;
 }
-.cycle-marker[data-phase='安全期'] {
-  border-color: #80aa8e;
-  background: #dcebdd;
-  color: #557b62;
+.cycle-marker[data-phase='黄体期'] {
+  color: #70788c;
 }
 .cycle-marker[data-phase='未记录'] {
-  border-color: #cfd2cd;
-  background: #f4f4f1;
   color: #a0a39d;
 }
 .cycle-marker.predicted {
+  border-color: currentColor;
   border-style: dashed;
-  opacity: 0.68;
+  opacity: 0.52;
 }
 .cycle-action {
   position: absolute;
@@ -4600,49 +4605,6 @@ svg {
   color: #985256;
   font-size: 9px;
 }
-.cycle-legend {
-  min-height: 28px;
-  padding: 6px 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 5px 9px;
-  border-bottom: 1px solid var(--line);
-  color: #777b75;
-}
-.cycle-legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.cycle-legend i {
-  width: 9px;
-  height: 9px;
-  border: 1px solid transparent;
-  border-radius: 50%;
-}
-.cycle-legend b {
-  font-size: 8px;
-  font-weight: 400;
-}
-.cycle-legend [data-phase='月经期'] i {
-  border-color: #c96f72;
-  background: #eaa6aa;
-}
-.cycle-legend [data-phase='排卵期'] i {
-  border-color: #d7b85e;
-  background: #f2d775;
-}
-.cycle-legend [data-phase='安全期'] i {
-  border-color: #80aa8e;
-  background: #9dc7a8;
-}
-.cycle-legend .prediction-key i {
-  border-color: #969a94;
-  border-style: dashed;
-  background: transparent;
-}
 
 /* Keep the savings sea wider and moderate in height; restore island proportions. */
 .savings-card.narrow {
@@ -4660,9 +4622,11 @@ svg {
   align-content: center;
 }
 .island-list .paper-island {
+  box-sizing: border-box;
   width: 112px;
   height: 68px;
   justify-self: center;
+  gap: 1px;
   padding: 8px;
   border-radius: 48% 52% 45% 55%;
 }
@@ -4679,8 +4643,5 @@ svg {
 @media (max-width: 430px) {
   .savings-card.narrow {
     width: calc(100% - 24px);
-  }
-  .cycle-legend {
-    gap: 4px 7px;
   }
 }

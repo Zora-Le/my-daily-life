@@ -14,10 +14,9 @@ import {
   ChevronRight,
   Droplet,
   Plus,
-  ShieldCheck,
-  Sparkles,
 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
+import { type Phase, PhaseIcon } from './LineArt';
 
 const weekNames = ['一', '二', '三', '四', '五', '六', '日'];
 interface Props {
@@ -65,9 +64,7 @@ function placeTasks(
 }
 
 function CycleIcon({ phase }: { phase?: string }) {
-  if (phase === '月经期') return <Droplet />;
-  if (phase === '排卵期') return <Sparkles />;
-  return <ShieldCheck />;
+  return phase ? <PhaseIcon phase={phase as Phase} /> : null;
 }
 
 export function WeekPlanner(props: Props) {
@@ -182,24 +179,6 @@ export function WeekPlanner(props: Props) {
               </div>
             );
           })}
-        </div>
-        <div className="cycle-legend" aria-label="周期图例">
-          <span data-phase="月经期">
-            <i />
-            <b>经期</b>
-          </span>
-          <span data-phase="排卵期">
-            <i />
-            <b>排卵期</b>
-          </span>
-          <span data-phase="安全期">
-            <i />
-            <b>安全期</b>
-          </span>
-          <span className="prediction-key">
-            <i />
-            <b>虚线为预测</b>
-          </span>
         </div>
         <div
           ref={trackRef}

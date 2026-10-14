@@ -167,7 +167,7 @@ const manuallyEnded = markPeriodEnd(defaultPeriod, '2026-01-03');
 assert.deepEqual(manuallyEnded, [
   { start: '2026-01-01', end: '2026-01-03', manualEnd: true },
 ]);
-assert.equal(cycleDayInfo('2026-01-04', manuallyEnded)?.phase, '安全期');
+assert.equal(cycleDayInfo('2026-01-04', manuallyEnded)?.phase, '卵泡期');
 
 assert.equal(estimatedCycleDays(defaultPeriod), 28);
 assert.deepEqual(cycleDayInfo('2026-01-29', defaultPeriod), {
@@ -194,8 +194,8 @@ assert.equal(estimatedCycleDays(fourCycles), 29); // 最近 3 个间隔：28、3
 
 assert.equal(cycleDayInfo('2026-01-14', defaultPeriod)?.phase, '排卵期');
 assert.equal(cycleDayInfo('2026-01-18', defaultPeriod)?.phase, '排卵期');
-assert.equal(cycleDayInfo('2026-01-13', defaultPeriod)?.phase, '安全期');
-assert.equal(cycleDayInfo('2026-01-19', defaultPeriod)?.phase, '安全期');
+assert.equal(cycleDayInfo('2026-01-13', defaultPeriod)?.phase, '卵泡期');
+assert.equal(cycleDayInfo('2026-01-19', defaultPeriod)?.phase, '黄体期');
 
 const oldState = normalizeLifeState({
   version: 2,
