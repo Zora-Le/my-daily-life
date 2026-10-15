@@ -344,7 +344,57 @@ export function normalizeSavings(
 
 type LegacyLifeState = Partial<LifeState> & { platformSavings?: unknown };
 
+export function normalizeRewardCards(
+  rawCards: unknown,
+  rawHistory: unknown,
+): { cards: RewardCard[]; history: LifeState['drawHistory'] } {
+  const source = Array.isArray(rawCards) ? rawCards : initialState.rewardCards;
+  const history = Array.isArray(rawHistory)
+    ? rawHistory
+        .filter(
+          item =>
+            item &&
+            typeof item === 'object' &&
+            typeof (item as Record<string, unknown>).cardId === 'string' &&
+            typeof (item as Record<string, unknown>).drawnAt === 'string',
+        )
+        .map(item => ({
+          cardId: String((item as Record<string, unknown>).cardId),
+          drawnAt: String((item as Record<string, unknown>).drawnAt),
+        }))
+    : [];
+  const historyByCard = new Map(
+    history.map(item => [item.cardId, item.drawnAt]),
+  );
+  const cards = source
+    .filter(item => item && typeof item === 'object')
+    .map((item, index): RewardCard => {
+      const card = item as Record<string, unknown>;
+      const id = String(card.id ?? '').trim() || `reward-${index + 1}`;
+      const drawnAt =
+        typeof card.drawnAt === 'string' && card.drawnAt
+          ? card.drawnAt
+          : historyByCard.get(id);
+      return {
+        id,
+        kind: card.kind === 'joy' ? 'joy' : 'sweet',
+        title: typeof card.title === 'string' ? card.title : '',
+        copy: typeof card.copy === 'string' ? card.copy : '',
+        ...(typeof card.image === 'string' && card.image
+          ? { image: card.image }
+          : {}),
+        ...(drawnAt ? { drawnAt } : {}),
+      };
+    });
+  const cardIds = new Set(cards.map(card => card.id));
+  return {
+    cards,
+    history: history.filter(item => cardIds.has(item.cardId)),
+  };
+}
+
 export function normalizeLifeState(parsed: LegacyLifeState): LifeState {
+  const rewards = normalizeRewardCards(parsed.rewardCards, parsed.drawHistory);
   const days = Object.fromEntries(
     Object.entries(parsed.days ?? {}).map(([key, day]) => [
       key,
@@ -386,5 +436,7 @@ export function normalizeLifeState(parsed: LegacyLifeState): LifeState {
     habitItems: Array.isArray(parsed.habitItems)
       ? parsed.habitItems
       : DEFAULT_HABIT_ITEMS,
+    rewardCards: rewards.cards,
+    drawHistory: rewards.history,
   };
 }

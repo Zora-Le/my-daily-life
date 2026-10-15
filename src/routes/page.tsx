@@ -260,6 +260,7 @@ export default function Page() {
           {page === 'rewards' && (
             <RewardsPage
               unlocked={unlocked}
+              preview={previewMode}
               cards={state.rewardCards}
               history={state.drawHistory}
               title={state.rewardTitle}
@@ -275,6 +276,17 @@ export default function Page() {
               }
               onHistory={drawHistory =>
                 update(current => ({ ...current, drawHistory }))
+              }
+              onDeleteCard={cardId =>
+                update(current => ({
+                  ...current,
+                  rewardCards: current.rewardCards.filter(
+                    card => card.id !== cardId,
+                  ),
+                  drawHistory: current.drawHistory.filter(
+                    item => item.cardId !== cardId,
+                  ),
+                }))
               }
               notify={notify}
             />

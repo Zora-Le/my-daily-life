@@ -4645,3 +4645,349 @@ svg {
     width: calc(100% - 24px);
   }
 }
+
+/* Reward card pools v2 */
+.drawn-rewards-section {
+  margin-top: 22px;
+}
+.drawn-reward-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.drawn-reward-card {
+  min-width: 0;
+  padding: 9px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ded8ce;
+  border-radius: 17px;
+  background: #f8f3e9;
+  box-shadow: 0 6px 16px rgba(73, 67, 57, 0.06);
+}
+.drawn-card-image {
+  height: 112px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 11px;
+  background: #e8e3d7;
+  color: #71827c;
+}
+.drawn-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.drawn-card-image svg {
+  width: 72px;
+  height: 92px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+}
+.drawn-reward-card > small {
+  margin-top: 8px;
+  color: #8d8a82;
+  font-size: 6px;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+}
+.drawn-reward-card h3 {
+  margin: 4px 0;
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 400;
+}
+.drawn-reward-card p {
+  min-height: 30px;
+  margin: 0 0 8px;
+  color: #777b76;
+  font-size: 8px;
+  line-height: 14px;
+}
+.drawn-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-top: auto;
+}
+.drawn-card-actions button {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 0;
+  border-radius: 8px;
+  background: #e4e8e4;
+  color: #64746e;
+  font-size: 8px;
+}
+.drawn-card-actions button.danger {
+  background: #f0e4df;
+  color: #956e67;
+}
+.reward-draw-panel {
+  min-height: 140px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  background: linear-gradient(145deg, #f5f1e8, #edf0ea);
+}
+.reward-draw-copy > span {
+  color: #7f8f89;
+  font-size: 8px;
+  letter-spacing: 1.4px;
+}
+.reward-draw-panel .pool-total {
+  align-self: start;
+  padding: 6px 9px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #6d7974;
+  font-size: 9px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.reward-pool-heading {
+  align-items: center;
+}
+.reward-add-button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ccd2cc;
+  border-radius: 50%;
+  background: #f8f6f0;
+  color: #657872;
+}
+.pool-stack-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.pool-stack {
+  min-width: 0;
+  padding: 13px 10px 11px;
+  overflow: hidden;
+  border: 1px solid #ddd8cc;
+  border-radius: 18px;
+  background: #f8f2e6;
+}
+.pool-stack.joy {
+  background: #edf1eb;
+}
+.pool-stack-cards {
+  position: relative;
+  width: 104px;
+  height: 142px;
+  margin: 0 auto;
+}
+.pool-stack-cards > i,
+.pool-card-back {
+  position: absolute;
+  inset: 5px 10px 5px 10px;
+  border: 1px solid #c9c0b1;
+  border-radius: 12px;
+  background: #eee5d4;
+}
+.pool-stack-cards > i:first-child {
+  transform: translate(-6px, 3px) rotate(-4deg);
+  background: #e8decb;
+}
+.pool-stack-cards > i:nth-child(2) {
+  transform: translate(6px, 2px) rotate(4deg);
+  background: #f3eadb;
+}
+.pool-stack.joy .pool-stack-cards > i {
+  background: #dfe7df;
+  border-color: #bfc9c0;
+}
+.pool-card-back {
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #8a8173;
+  box-shadow: 0 5px 12px rgba(76, 69, 57, 0.1);
+}
+.pool-stack.joy .pool-card-back {
+  background: #e7eee6;
+  color: #71847b;
+  border-color: #b9c7bd;
+}
+.pool-card-back svg {
+  width: 82%;
+  height: 88%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.25;
+}
+.pool-stack-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  margin-top: 8px;
+}
+.pool-stack-meta b {
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--serif);
+  font-size: 10px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pool-stack-meta span {
+  flex: none;
+  color: #8c8b84;
+  font-size: 8px;
+}
+.pool-privacy-note {
+  margin: 10px 2px 0;
+  color: #97968f;
+  font-size: 8px;
+  line-height: 14px;
+  text-align: center;
+}
+.card-back svg {
+  width: 115px;
+  height: 150px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.15;
+}
+.card-front {
+  overflow: hidden;
+}
+.card-front img {
+  width: calc(100% + 40px);
+  height: 112px;
+  margin: -20px -20px 16px;
+  object-fit: cover;
+}
+.card-front h2 {
+  margin: 9px 0 2px;
+}
+.reward-create-sheet {
+  max-height: 94vh;
+  overflow-y: auto;
+  background: #faf8f2;
+}
+.reward-kind-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-bottom: 16px;
+  padding: 4px;
+  border-radius: 14px;
+  background: #e9e8e1;
+}
+.reward-kind-picker button {
+  height: 36px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: #85877f;
+  font-family: var(--serif);
+  font-size: 10px;
+}
+.reward-kind-picker button.active {
+  background: #fffefa;
+  color: #596963;
+  box-shadow: 0 2px 8px rgba(67, 67, 59, 0.07);
+}
+.reward-create-sheet textarea {
+  width: 100%;
+  min-height: 72px;
+  margin-top: 6px;
+  padding: 10px 11px;
+  resize: vertical;
+  border: 1px solid #d9d7d0;
+  border-radius: 12px;
+  background: #fff;
+  outline: none;
+  font: inherit;
+  font-size: 11px;
+}
+.card-image-picker {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 12px;
+  margin: 4px 0 18px;
+  padding: 11px;
+  border: 1px dashed #d1cbc0;
+  border-radius: 16px;
+  background: #f4f0e8;
+}
+.card-image-picker > img,
+.card-image-picker > svg {
+  width: 88px;
+  height: 112px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #eee4d3;
+}
+.card-image-picker > svg {
+  padding: 8px;
+  fill: none;
+  stroke: #827d72;
+  stroke-width: 1.2;
+}
+.card-image-picker > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.card-image-picker button,
+.image-upload-button {
+  min-height: 34px;
+  margin: 0 !important;
+  padding: 0 8px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #d6d3ca;
+  border-radius: 10px;
+  background: #fff;
+  color: #65736e !important;
+  font-size: 8px !important;
+}
+.card-image-picker small {
+  color: #8e8e87;
+  font-size: 7px;
+  line-height: 12px;
+}
+@media (max-width: 390px) {
+  .pool-stack-grid,
+  .drawn-reward-grid {
+    gap: 7px;
+  }
+  .pool-stack {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+  .pool-stack-cards {
+    width: 96px;
+    height: 132px;
+  }
+  .reward-draw-panel {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 15px;
+  }
+  .drawn-card-image {
+    height: 100px;
+  }
+  .card-image-picker {
+    grid-template-columns: 78px minmax(0, 1fr);
+    gap: 9px;
+  }
+  .card-image-picker > img,
+  .card-image-picker > svg {
+    width: 78px;
+    height: 104px;
+  }
+}

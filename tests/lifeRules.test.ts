@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
-import { normalizeLifeState } from '../src/hooks/lifeSchema.ts';
+import {
+  normalizeLifeState,
+  normalizeRewardCards,
+} from '../src/hooks/lifeSchema.ts';
 import {
   cycleDayInfo,
   estimatedCycleDays,
@@ -155,6 +158,34 @@ const renamedIslands = renameSavingsIsland(
 assert.equal(renamedIslands[0].displayName, '旅行基金');
 assert.equal(renamedIslands[0].id, 'stable-id');
 assert.equal(deleteSavingsIsland(renamedIslands, 'stable-id').length, 0);
+
+const normalizedRewards = normalizeRewardCards(
+  [
+    {
+      id: 'legacy-card',
+      kind: 'unexpected',
+      title: 123,
+      copy: null,
+      image: 'data:image/jpeg;base64,card',
+    },
+    { id: 'joy-card', kind: 'joy', title: '吹风', copy: '慢一点' },
+  ],
+  [
+    { cardId: 'joy-card', drawnAt: '2026-10-15T12:00:00.000Z' },
+    { cardId: 'missing-card', drawnAt: '2026-10-14T12:00:00.000Z' },
+  ],
+);
+assert.deepEqual(normalizedRewards.cards[0], {
+  id: 'legacy-card',
+  kind: 'sweet',
+  title: '',
+  copy: '',
+  image: 'data:image/jpeg;base64,card',
+});
+assert.equal(normalizedRewards.cards[1].drawnAt, '2026-10-15T12:00:00.000Z');
+assert.deepEqual(normalizedRewards.history, [
+  { cardId: 'joy-card', drawnAt: '2026-10-15T12:00:00.000Z' },
+]);
 console.log('lifeRules assertions passed');
 
 // 生理周期：默认经期、手动结束、预测规则与旧数据兼容。
