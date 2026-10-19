@@ -1,12 +1,13 @@
 import type {
   LifeState,
   MoneyTransaction,
+  MonthlyMoney,
   PendingExpense,
 } from '@/hooks/useLifeStore';
 import {
   createSavingsIsland,
   deleteSavingsIsland,
-  monthlyTransactionSummary,
+  mergeMonthlyMoneySummary,
   renameSavingsIsland,
 } from '@/lib/lifeRules';
 import { safeCalculate } from '@/lib/lifeUtils';
@@ -22,6 +23,7 @@ import {
   YAxis,
 } from 'recharts';
 import { MoneyCalendar } from './MoneyCalendar';
+import { MonthlyMoneyEditor } from './MonthlyMoneyEditor';
 import { PendingExpenses } from './PendingExpenses';
 import { SavingsIsland } from './SavingsIsland';
 
@@ -29,9 +31,11 @@ type Saving = LifeState['savings'][number];
 interface Props {
   savings: Saving[];
   transactions: MoneyTransaction[];
+  monthlyMoney: MonthlyMoney[];
   pendingExpenses: PendingExpense[];
   onSavings: (items: Saving[]) => void;
   onTransactions: (items: MoneyTransaction[]) => void;
+  onMonthlyMoney: (items: MonthlyMoney[]) => void;
   onPendingExpenses: (items: PendingExpense[]) => void;
   notify: (text: string) => void;
 }
@@ -39,9 +43,11 @@ interface Props {
 export function MoneyPage({
   savings,
   transactions,
+  monthlyMoney,
   pendingExpenses,
   onSavings,
   onTransactions,
+  onMonthlyMoney,
   onPendingExpenses,
   notify,
 }: Props) {
@@ -74,11 +80,13 @@ export function MoneyPage({
     setEditingName(id);
   };
   const total = savings.reduce((sum, item) => sum + item.value, 0);
-  const visibleChart = monthlyTransactionSummary(transactions).map(item => ({
-    label: `${Number(item.month.slice(5))}月`,
-    income: item.income / 100,
-    expense: item.expense / 100,
-  }));
+  const visibleChart = mergeMonthlyMoneySummary(transactions, monthlyMoney).map(
+    item => ({
+      label: `${Number(item.month.slice(5))}月`,
+      income: item.income / 100,
+      expense: item.expense / 100,
+    }),
+  );
   return (
     <>
       <section className="savings-card narrow">
@@ -143,8 +151,15 @@ export function MoneyPage({
       <section className="life-section money-chart-section">
         <div className="section-heading">
           <div>
-            <h2>月度收支</h2>
-            <p>日明细汇总 · 单位：元</p>
+            <div className="money-title-row">
+              <h2>月度收支</h2>
+              <MonthlyMoneyEditor
+                items={monthlyMoney}
+                onChange={onMonthlyMoney}
+                notify={notify}
+              />
+            </div>
+            <p>日明细整月优先 · 单位：元</p>
           </div>
           <span className="bar-legend">
             <i />

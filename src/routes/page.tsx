@@ -58,6 +58,9 @@ export default function Page() {
   const [week, setWeek] = useState(weekStart(TODAY));
   const [draft, setDraft] = useState<TaskDraft | null>(null);
   const [toast, setToast] = useState('');
+  const [previewMonthlyMoney, setPreviewMonthlyMoney] = useState(
+    state.monthlyMoney,
+  );
   const previewMode =
     typeof window !== 'undefined' &&
     new URLSearchParams(window.location.search).get('preview') === 'complete';
@@ -258,10 +261,20 @@ export default function Page() {
             <MoneyPage
               savings={state.savings}
               transactions={previewTransactions}
+              monthlyMoney={
+                previewMode ? previewMonthlyMoney : state.monthlyMoney
+              }
               pendingExpenses={previewPending}
               onTransactions={moneyTransactions =>
                 update(current => ({ ...current, moneyTransactions }))
               }
+              onMonthlyMoney={monthlyMoney => {
+                if (previewMode) {
+                  setPreviewMonthlyMoney(monthlyMoney);
+                  return;
+                }
+                update(current => ({ ...current, monthlyMoney }));
+              }}
               onPendingExpenses={pendingExpenses =>
                 update(current => ({ ...current, pendingExpenses }))
               }

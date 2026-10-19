@@ -1,6 +1,7 @@
 import type {
   ConfigItem,
   MoneyTransaction,
+  MonthlyMoney,
   ProgressRecord,
   SavingsIsland,
 } from '@/hooks/lifeSchema';
@@ -72,6 +73,47 @@ export function monthlyTransactionSummary(
     month,
     ...totals,
   }));
+}
+
+/**
+ * 合并图表月度汇总。monthlyMoney 沿用历史存储语义：income/expense 为元；
+ * 返回值与 monthlyTransactionSummary 一致，income/expense 均为分。
+ */
+export function mergeMonthlyMoneySummary(
+  transactions: MoneyTransaction[],
+  manual: MonthlyMoney[],
+  anchorMonth: Date | string = new Date(),
+) {
+  const anchor =
+    typeof anchorMonth === 'string'
+      ? new Date(`${anchorMonth.slice(0, 7)}-01T00:00:00`)
+      : anchorMonth;
+  const summary = monthlyTransactionSummary(transactions, anchor);
+  const transactionMonths = new Set(
+    transactions.map(item => item.date.slice(0, 7)),
+  );
+  const manualByMonth = new Map(manual.map(item => [item.month, item]));
+
+  return summary.map(item => {
+    if (transactionMonths.has(item.month)) return item;
+    const saved = manualByMonth.get(item.month);
+    return saved
+      ? {
+          month: item.month,
+          income: Math.round(Number(saved.income || 0) * 100),
+          expense: Math.round(Number(saved.expense || 0) * 100),
+        }
+      : item;
+  });
+}
+
+export function upsertMonthlyMoney(
+  items: MonthlyMoney[],
+  next: MonthlyMoney,
+): MonthlyMoney[] {
+  const index = items.findIndex(item => item.month === next.month);
+  if (index < 0) return [...items, next];
+  return items.map((item, itemIndex) => (itemIndex === index ? next : item));
 }
 
 export function calendarCells(month: string) {

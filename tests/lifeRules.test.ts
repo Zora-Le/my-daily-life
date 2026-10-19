@@ -16,10 +16,12 @@ import {
   createSavingsIsland,
   deleteSavingsIsland,
   isRewardUnlocked,
+  mergeMonthlyMoneySummary,
   monthlyTransactionSummary,
   parseMoneyToCents,
   renameSavingsIsland,
   summarizeTransactions,
+  upsertMonthlyMoney,
 } from '../src/lib/lifeRules.ts';
 
 assert.equal(parseMoneyToCents('0.10'), 10);
@@ -51,6 +53,51 @@ assert.deepEqual(
 );
 assert.equal(sixMonths[0].expense, 0);
 assert.equal(sixMonths[3].expense, 1250);
+
+const mergedMonthly = mergeMonthlyMoneySummary(
+  [
+    {
+      id: 5,
+      date: '2026-08-02',
+      kind: 'expense',
+      amountCents: 1250,
+      detail: '午餐',
+    },
+  ],
+  [
+    { month: '2026-06', income: 100.25, expense: 20.5 },
+    { month: '2026-08', income: 999, expense: 999 },
+    { month: '2026-09', income: 0, expense: 0 },
+  ],
+  '2026-10',
+);
+assert.deepEqual(
+  mergedMonthly.map(item => item.month),
+  ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10'],
+);
+assert.deepEqual(mergedMonthly[1], {
+  month: '2026-06',
+  income: 10025,
+  expense: 2050,
+});
+assert.deepEqual(mergedMonthly[3], {
+  month: '2026-08',
+  income: 0,
+  expense: 1250,
+});
+assert.deepEqual(mergedMonthly[4], {
+  month: '2026-09',
+  income: 0,
+  expense: 0,
+});
+assert.deepEqual(
+  upsertMonthlyMoney([{ month: '2026-06', income: 1, expense: 2 }], {
+    month: '2026-06',
+    income: 3.45,
+    expense: 0,
+  }),
+  [{ month: '2026-06', income: 3.45, expense: 0 }],
+);
 const selectedDateEntry = createMoneyTransaction(
   '2026-09-21',
   'income',
