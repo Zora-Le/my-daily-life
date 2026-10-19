@@ -77,6 +77,7 @@ export function MoneyPage({
   const addIsland = () => {
     const id = `island-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
     onSavings([...savings, createSavingsIsland(id, savings.length + 1)]);
+    setEditingSavings(true);
     setEditingName(id);
   };
   const total = savings.reduce((sum, item) => sum + item.value, 0);
@@ -129,6 +130,12 @@ export function MoneyPage({
                 }
               />
             ))}
+            {!savings.length && !editingSavings && (
+              <button className="add-island" onClick={addIsland}>
+                <Plus size={13} />
+                添加第一个储蓄岛
+              </button>
+            )}
             {editingSavings && (
               <button className="add-island" onClick={addIsland}>
                 <Plus size={13} />

@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
 import {
+  STORAGE_KEY,
+  initialState,
   normalizeLifeState,
   normalizeRewardCards,
 } from '../src/hooks/lifeSchema.ts';
+import { loadLifeState } from '../src/hooks/useLifeStore.ts';
 import {
   cycleDayInfo,
   estimatedCycleDays,
@@ -23,6 +26,53 @@ import {
   summarizeTransactions,
   upsertMonthlyMoney,
 } from '../src/lib/lifeRules.ts';
+
+const businessArrayKeys = [
+  'tasks',
+  'menstrualRecords',
+  'books',
+  'notes',
+  'journals',
+  'savings',
+  'monthlyMoney',
+  'moneyTransactions',
+  'pendingExpenses',
+  'rewardCards',
+  'drawHistory',
+] as const;
+
+assert.equal(STORAGE_KEY, 'my-daily-my-life:v3');
+assert.equal(initialState.version, 3);
+assert.deepEqual(initialState.days, {});
+assert.deepEqual(initialState.phases, {});
+for (const key of businessArrayKeys) assert.deepEqual(initialState[key], []);
+assert.equal(initialState.progressText, '');
+assert.equal(initialState.rewardTitle, '');
+assert.equal(initialState.rewardCopy, '');
+assert.ok(initialState.progressItems.length > 0);
+assert.ok(initialState.habitItems.length > 0);
+
+const normalizedEmpty = normalizeLifeState({});
+assert.deepEqual(normalizedEmpty.days, {});
+assert.deepEqual(normalizedEmpty.phases, {});
+for (const key of businessArrayKeys) assert.deepEqual(normalizedEmpty[key], []);
+assert.equal(normalizedEmpty.progressText, '');
+assert.equal(normalizedEmpty.rewardTitle, '');
+assert.equal(normalizedEmpty.rewardCopy, '');
+assert.ok(normalizedEmpty.progressItems.length > 0);
+assert.ok(normalizedEmpty.habitItems.length > 0);
+
+const requestedStorageKeys: string[] = [];
+const loadedWithoutV2 = loadLifeState({
+  getItem(key) {
+    requestedStorageKeys.push(key);
+    return key === 'my-daily-my-life:v2'
+      ? JSON.stringify({ version: 2, books: [{ title: '旧测试书籍' }] })
+      : null;
+  },
+});
+assert.deepEqual(requestedStorageKeys, ['my-daily-my-life:v3']);
+assert.deepEqual(loadedWithoutV2.books, []);
 
 assert.equal(parseMoneyToCents('0.10'), 10);
 assert.equal(parseMoneyToCents('12.34'), 1234);
@@ -191,7 +241,7 @@ assert.deepEqual(
   ]),
   [
     ['wechat', '微信零钱', 100],
-    ['bank', '银行卡', 250],
+    ['bank', 'bank', 250],
   ],
 );
 assert.equal(migratedFixedSavings.savings[0].expression, '=88+12');

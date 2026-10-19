@@ -10,18 +10,23 @@ import {
 
 export * from './lifeSchema';
 
-function load(): LifeState {
-  if (typeof window === 'undefined') return initialState;
+type StorageReader = Pick<Storage, 'getItem'>;
+
+export function loadLifeState(storage?: StorageReader): LifeState {
+  const reader =
+    storage ??
+    (typeof window === 'undefined' ? undefined : window.localStorage);
+  if (!reader) return initialState;
   try {
-    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    return parsed?.version === 2 ? normalizeLifeState(parsed) : initialState;
+    const parsed = JSON.parse(reader.getItem(STORAGE_KEY) || 'null');
+    return parsed?.version === 3 ? normalizeLifeState(parsed) : initialState;
   } catch {
     return initialState;
   }
 }
 
 export function useLifeStore() {
-  const [state, setState] = useState<LifeState>(load);
+  const [state, setState] = useState<LifeState>(loadLifeState);
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -41,7 +46,7 @@ export function useLifeStore() {
     }));
   const importState = (raw: string) => {
     const parsed = JSON.parse(raw);
-    if (parsed?.version !== 2) throw new Error('备份版本不兼容');
+    if (parsed?.version !== 3) throw new Error('备份版本不兼容');
     setState(normalizeLifeState(parsed));
   };
   return { state, update, updateDay, importState, storageKey: STORAGE_KEY };

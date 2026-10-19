@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'my-daily-v1';
+const CACHE_VERSION = 'my-daily-v2';
 const PRECACHE_NAME = `${CACHE_VERSION}-precache`;
 const RUNTIME_NAME = `${CACHE_VERSION}-runtime`;
 const PRECACHE_URLS = [

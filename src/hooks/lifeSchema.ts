@@ -85,7 +85,7 @@ export type SavingsIsland = {
   updatedAt?: string;
 };
 export type LifeState = {
-  version: 2;
+  version: 3;
   days: Record<string, DayRecord>;
   tasks: LifeTask[];
   phases: Record<string, Phase>;
@@ -106,7 +106,7 @@ export type LifeState = {
   drawHistory: { cardId: string; drawnAt: string }[];
 };
 
-export const STORAGE_KEY = 'my-daily-my-life:v2';
+export const STORAGE_KEY = 'my-daily-my-life:v3';
 export const DEFAULT_PROGRESS_ITEMS: ConfigItem[] = [
   {
     id: 'progress-listening',
@@ -152,67 +152,25 @@ export const emptyDay = (): DayRecord => ({
   habits: { 'habit-cardio': false, 'habit-strength': false },
 });
 
-export const DEFAULT_SAVINGS_ISLANDS: SavingsIsland[] = [
-  {
-    id: 'cash',
-    displayName: '日常账户',
-    detail: '零钱通 · E卡通 · 现金',
-    expression: '=18620',
-    value: 18620,
-  },
-  {
-    id: 'bank',
-    displayName: '银行卡',
-    detail: '工商 · 中国 · 招商',
-    expression: '=53800',
-    value: 53800,
-  },
-  {
-    id: 'ali',
-    displayName: '支付宝',
-    detail: '支付宝',
-    expression: '=9460',
-    value: 9460,
-  },
-];
-
 export const initialState: LifeState = {
-  version: 2,
+  version: 3,
   days: {},
   tasks: [],
   phases: {},
   menstrualRecords: [],
-  books: [
-    { id: 1, title: '《悉达多》', shelf: 1, createdAt: '2026-10-12' },
-    {
-      id: 2,
-      title: '设计心理学 · 论文笔记',
-      shelf: 2,
-      createdAt: '2026-10-13',
-    },
-  ],
+  books: [],
   notes: [],
-  progressText: '把今天学到的一点点，慢慢积成自己的光。',
+  progressText: '',
   journals: [],
-  savings: DEFAULT_SAVINGS_ISLANDS,
+  savings: [],
   monthlyMoney: [],
   moneyTransactions: [],
   pendingExpenses: [],
   progressItems: DEFAULT_PROGRESS_ITEMS,
   habitItems: DEFAULT_HABIT_ITEMS,
-  rewardTitle: 'A SMALL REWARD',
-  rewardCopy: '认真生活，也给自己一份奖励。',
-  rewardCards: [
-    { id: 's1', kind: 'sweet', title: '黄昏散步', copy: '风把今天吹得很轻。' },
-    {
-      id: 's2',
-      kind: 'sweet',
-      title: '窗边早餐',
-      copy: '好好吃饭，是给自己的拥抱。',
-    },
-    { id: 'j1', kind: 'joy', title: '吹一吹晚风', copy: '把疲惫交给风。' },
-    { id: 'j2', kind: 'joy', title: '看看小猫咪', copy: '允许自己停一会儿。' },
-  ],
+  rewardTitle: '',
+  rewardCopy: '',
+  rewardCards: [],
   drawHistory: [],
 };
 
@@ -324,31 +282,23 @@ export function normalizeSavings(
         : null;
   if (legacyObject) {
     return Object.entries(legacyObject as Record<string, unknown>).map(
-      ([key, item], index) => {
-        const fallback = DEFAULT_SAVINGS_ISLANDS.find(
-          value => value.id === key,
-        );
-        const normalized = normalizeSavingsItem(
-          item,
-          key,
-          fallback?.displayName ?? key ?? `储蓄岛 ${index + 1}`,
-        );
-        return normalized.detail || !fallback
-          ? normalized
-          : { ...normalized, detail: fallback.detail };
-      },
+      ([key, item], index) =>
+        normalizeSavingsItem(item, key, key || `储蓄岛 ${index + 1}`),
     );
   }
-  return DEFAULT_SAVINGS_ISLANDS.map(item => ({ ...item }));
+  return [];
 }
 
-type LegacyLifeState = Partial<LifeState> & { platformSavings?: unknown };
+type NormalizableLifeState = Partial<Omit<LifeState, 'version'>> & {
+  version?: unknown;
+  platformSavings?: unknown;
+};
 
 export function normalizeRewardCards(
   rawCards: unknown,
   rawHistory: unknown,
 ): { cards: RewardCard[]; history: LifeState['drawHistory'] } {
-  const source = Array.isArray(rawCards) ? rawCards : initialState.rewardCards;
+  const source = Array.isArray(rawCards) ? rawCards : [];
   const history = Array.isArray(rawHistory)
     ? rawHistory
         .filter(
@@ -393,13 +343,12 @@ export function normalizeRewardCards(
   };
 }
 
-export function normalizeLifeState(parsed: LegacyLifeState): LifeState {
+export function normalizeLifeState(parsed: NormalizableLifeState): LifeState {
   const rewards = normalizeRewardCards(parsed.rewardCards, parsed.drawHistory);
+  const rawDays =
+    parsed.days && typeof parsed.days === 'object' ? parsed.days : {};
   const days = Object.fromEntries(
-    Object.entries(parsed.days ?? {}).map(([key, day]) => [
-      key,
-      normalizeDay(day),
-    ]),
+    Object.entries(rawDays).map(([key, day]) => [key, normalizeDay(day)]),
   );
   const transactions = Array.isArray(parsed.moneyTransactions)
     ? parsed.moneyTransactions.map(item => ({
@@ -410,10 +359,11 @@ export function normalizeLifeState(parsed: LegacyLifeState): LifeState {
       }))
     : [];
   return {
-    ...initialState,
-    ...parsed,
-    version: 2,
+    version: 3,
     days,
+    tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+    phases:
+      parsed.phases && typeof parsed.phases === 'object' ? parsed.phases : {},
     menstrualRecords: Array.isArray(parsed.menstrualRecords)
       ? parsed.menstrualRecords
           .filter(item => item && typeof item.start === 'string')
@@ -423,6 +373,10 @@ export function normalizeLifeState(parsed: LegacyLifeState): LifeState {
             ...(item.manualEnd ? { manualEnd: true } : {}),
           }))
       : [],
+    books: Array.isArray(parsed.books) ? parsed.books : [],
+    notes: Array.isArray(parsed.notes) ? parsed.notes : [],
+    progressText:
+      typeof parsed.progressText === 'string' ? parsed.progressText : '',
     journals: Array.isArray(parsed.journals) ? parsed.journals : [],
     savings: normalizeSavings(parsed.savings, parsed.platformSavings),
     monthlyMoney: Array.isArray(parsed.monthlyMoney) ? parsed.monthlyMoney : [],
@@ -436,6 +390,9 @@ export function normalizeLifeState(parsed: LegacyLifeState): LifeState {
     habitItems: Array.isArray(parsed.habitItems)
       ? parsed.habitItems
       : DEFAULT_HABIT_ITEMS,
+    rewardTitle:
+      typeof parsed.rewardTitle === 'string' ? parsed.rewardTitle : '',
+    rewardCopy: typeof parsed.rewardCopy === 'string' ? parsed.rewardCopy : '',
     rewardCards: rewards.cards,
     drawHistory: rewards.history,
   };
