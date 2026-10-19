@@ -10,7 +10,11 @@ import type {
   PendingExpense,
 } from '@/hooks/useLifeStore';
 import { emptyDay, useLifeStore } from '@/hooks/useLifeStore';
-import { markPeriodEnd, markPeriodStart } from '@/lib/cycleRules';
+import {
+  markPeriodEnd,
+  markPeriodStart,
+  removePeriodRecord,
+} from '@/lib/cycleRules';
 import { isRewardUnlocked } from '@/lib/lifeRules';
 import { TODAY, weekStart } from '@/lib/lifeUtils';
 import { CalendarDays, Gift, Settings, WalletCards, X } from 'lucide-react';
@@ -216,6 +220,16 @@ export default function Page() {
                   ),
                 }));
                 notify('已更新经期结束日，并刷新周期预测');
+              }}
+              onRemovePeriod={iso => {
+                update(current => ({
+                  ...current,
+                  menstrualRecords: removePeriodRecord(
+                    current.menstrualRecords,
+                    iso,
+                  ),
+                }));
+                notify('已撤销本次经期记录，并重新计算周期预测');
               }}
               openTask={(start, end) =>
                 setDraft({ title: '', start, end, tone: 'blue' })

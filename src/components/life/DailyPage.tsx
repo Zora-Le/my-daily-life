@@ -35,6 +35,7 @@ interface Props {
   onJournals: (items: JournalEntry[]) => void;
   onMarkPeriodStart: (date: string) => void;
   onMarkPeriodEnd: (date: string) => void;
+  onRemovePeriod: (date: string) => void;
   openTask: (start: string, end: string) => void;
   notify: (text: string) => void;
 }
@@ -55,6 +56,7 @@ export function DailyPage(props: Props) {
     onJournals,
     onMarkPeriodStart,
     onMarkPeriodEnd,
+    onRemovePeriod,
     openTask,
     notify,
   } = props;
@@ -94,6 +96,7 @@ export function DailyPage(props: Props) {
         onSelectDate={onDate}
         onMarkStart={onMarkPeriodStart}
         onMarkEnd={onMarkPeriodEnd}
+        onRemovePeriod={onRemovePeriod}
         onTasks={onTasks}
         openTask={openTask}
       />

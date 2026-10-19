@@ -8,6 +8,7 @@ import {
   estimatedCycleDays,
   markPeriodEnd,
   markPeriodStart,
+  removePeriodRecord,
 } from '../src/lib/cycleRules.ts';
 import {
   calendarCells,
@@ -227,6 +228,44 @@ assert.equal(cycleDayInfo('2026-01-14', defaultPeriod)?.phase, '排卵期');
 assert.equal(cycleDayInfo('2026-01-18', defaultPeriod)?.phase, '排卵期');
 assert.equal(cycleDayInfo('2026-01-13', defaultPeriod)?.phase, '卵泡期');
 assert.equal(cycleDayInfo('2026-01-19', defaultPeriod)?.phase, '黄体期');
+
+const recordsWithMistap = [
+  { start: '2026-09-20', end: '2026-09-24' },
+  { start: '2026-10-20', end: '2026-10-24' },
+];
+const afterRemoval = removePeriodRecord(recordsWithMistap, '2026-10-20');
+assert.deepEqual(afterRemoval, [{ start: '2026-09-20', end: '2026-09-24' }]);
+assert.equal(cycleDayInfo('2026-10-20', afterRemoval)?.predicted, true);
+assert.equal(cycleDayInfo('2026-10-20', afterRemoval)?.phase, '月经期');
+assert.strictEqual(
+  removePeriodRecord(recordsWithMistap, '2026-10-19'),
+  recordsWithMistap,
+);
+const threeRecords = [
+  { start: '2026-08-21', end: '2026-08-25' },
+  ...recordsWithMistap,
+];
+assert.deepEqual(removePeriodRecord(threeRecords, '2026-09-22'), [
+  { start: '2026-08-21', end: '2026-08-25' },
+  { start: '2026-10-20', end: '2026-10-24' },
+]);
+assert.equal(
+  cycleDayInfo(
+    '2026-10-20',
+    removePeriodRecord(recordsWithMistap, '2026-10-20'),
+  )?.predicted,
+  true,
+);
+assert.equal(
+  cycleDayInfo(
+    '2026-10-20',
+    removePeriodRecord(
+      [{ start: '2026-10-20', end: '2026-10-24' }],
+      '2026-10-20',
+    ),
+  ),
+  null,
+);
 
 const oldState = normalizeLifeState({
   version: 2,

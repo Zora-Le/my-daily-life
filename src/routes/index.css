@@ -4605,6 +4605,11 @@ svg {
   color: #985256;
   font-size: 9px;
 }
+.cycle-action .cycle-remove-button {
+  border-color: #ddcdc5;
+  background: #f4eee9;
+  color: #8b655f;
+}
 
 /* Keep the savings sea wider and moderate in height; restore island proportions. */
 .savings-card.narrow {
@@ -4649,6 +4654,51 @@ svg {
 /* Reward card pools v2 */
 .drawn-rewards-section {
   margin-top: 22px;
+  overflow: hidden;
+}
+.drawn-rewards-heading {
+  align-items: center;
+}
+.drawn-toggle {
+  min-height: 32px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #d7d9d2;
+  border-radius: 999px;
+  background: #eef0eb;
+  color: #687670;
+  font-size: 9px;
+}
+.drawn-reward-stack {
+  position: relative;
+  padding: 0 12px 14px 0;
+}
+.drawn-reward-stack::before,
+.drawn-reward-stack::after {
+  content: '';
+  position: absolute;
+  border: 1px solid #d8d2c7;
+  border-radius: 17px;
+  background: #e9e6dc;
+  pointer-events: none;
+}
+.drawn-reward-stack::before {
+  inset: 7px 6px 7px 6px;
+  transform: rotate(0.8deg);
+}
+.drawn-reward-stack::after {
+  inset: 13px 0 0 12px;
+  background: #dddeda;
+  transform: rotate(1.3deg);
+}
+.drawn-reward-stack.single {
+  padding: 0;
+}
+.drawn-reward-stack.single::before,
+.drawn-reward-stack.single::after {
+  display: none;
 }
 .drawn-reward-grid {
   display: grid;
@@ -4656,6 +4706,8 @@ svg {
   gap: 10px;
 }
 .drawn-reward-card {
+  position: relative;
+  z-index: 1;
   min-width: 0;
   padding: 9px;
   display: flex;
@@ -4665,7 +4717,22 @@ svg {
   background: #f8f3e9;
   box-shadow: 0 6px 16px rgba(73, 67, 57, 0.06);
 }
+.drawn-stack-layers {
+  display: none;
+}
+.drawn-card-face-button {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
 .drawn-card-image {
+  width: 100%;
   height: 112px;
   display: grid;
   place-items: center;
@@ -4686,25 +4753,32 @@ svg {
   stroke: currentColor;
   stroke-width: 1.2;
 }
-.drawn-reward-card > small {
+.drawn-card-face-button > small {
   margin-top: 8px;
   color: #8d8a82;
   font-size: 6px;
   letter-spacing: .7px;
   text-transform: uppercase;
 }
-.drawn-reward-card h3 {
+.drawn-card-face-button h3 {
   margin: 4px 0;
   font-family: var(--serif);
   font-size: 14px;
   font-weight: 400;
 }
-.drawn-reward-card p {
+.drawn-card-face-button p {
+  width: 100%;
   min-height: 30px;
   margin: 0 0 8px;
   color: #777b76;
   font-size: 8px;
   line-height: 14px;
+}
+.drawn-stack-count {
+  margin: 8px 2px 0;
+  color: #85877f;
+  font-size: 8px;
+  text-align: center;
 }
 .drawn-card-actions {
   display: grid;

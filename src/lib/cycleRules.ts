@@ -53,6 +53,18 @@ export function markPeriodEnd(records: MenstrualRecord[], date: string) {
   );
 }
 
+/** 删除包含指定日期的整条实际经期记录；预测日期不会命中。 */
+export function removePeriodRecord(
+  records: MenstrualRecord[],
+  date: string,
+): MenstrualRecord[] {
+  const index = records.findIndex(
+    item => date >= item.start && date <= item.end,
+  );
+  if (index < 0) return records;
+  return records.filter((_, itemIndex) => itemIndex !== index);
+}
+
 function phaseAfterPeriod(date: string, end: string): CycleDayInfo {
   const ovulationStart = addDays(end, OVULATION_OFFSET_AFTER_END);
   const ovulationEnd = addDays(ovulationStart, OVULATION_DAYS - 1);

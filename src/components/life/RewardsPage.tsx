@@ -6,12 +6,12 @@ import {
   Paintbrush,
   Plus,
   Sparkles,
-  Trash2,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { ConfirmModal } from './ConfirmModal';
 import { DrawingEditor } from './DrawingEditor';
+import { DrawnRewardsDeck } from './DrawnRewardsDeck';
 
 type Kind = RewardCard['kind'];
 type Draft = { kind: Kind; title: string; copy: string; image?: string };
@@ -127,7 +127,9 @@ export function RewardsPage({
         drawnAt: `2026-10-${String(14 - index).padStart(2, '0')}T12:00:00.000Z`,
       }))
     : [];
-  const displayedDrawn = drawn.length ? drawn : previewDrawn;
+  const displayedDrawn = [...(drawn.length ? drawn : previewDrawn)].sort(
+    (a, b) => (b.drawnAt ?? '').localeCompare(a.drawnAt ?? ''),
+  );
   const draw = () => {
     if (!unlocked || !undrawn.length) return;
     setPending(undrawn[Math.floor(Math.random() * undrawn.length)]);
@@ -183,40 +185,12 @@ export function RewardsPage({
         />
       </section>
 
-      {displayedDrawn.length > 0 && (
-        <section className="life-section drawn-rewards-section">
-          <div className="section-heading">
-            <div>
-              <span className="overline">COLLECTED</span>
-              <h2>已抽 · {displayedDrawn.length}</h2>
-            </div>
-          </div>
-          <div className="drawn-reward-grid">
-            {displayedDrawn.map(card => (
-              <article className="drawn-reward-card" key={card.id}>
-                <CardFace card={card} />
-                <div className="drawn-card-actions">
-                  <button
-                    onClick={() => setEditing(card)}
-                    aria-label={`编辑 ${card.title}`}
-                  >
-                    <Paintbrush size={13} /> 编辑
-                  </button>
-                  {!card.id.startsWith('preview-') && (
-                    <button
-                      className="danger"
-                      onClick={() => setDeleteTarget(card)}
-                      aria-label={`删除 ${card.title}`}
-                    >
-                      <Trash2 size={13} /> 删除
-                    </button>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
+      <DrawnRewardsDeck
+        cards={displayedDrawn}
+        renderFace={card => <CardFace card={card} />}
+        onEdit={setEditing}
+        onDelete={setDeleteTarget}
+      />
 
       <section
         className={`draw-deck reward-draw-panel ${unlocked ? 'unlocked' : 'locked'}`}
