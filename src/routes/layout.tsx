@@ -9,10 +9,23 @@ import { useEffect } from 'react';
 import '@/infra/sso/sso.css';
 import './index.css';
 
+function isStandaloneDeployment() {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const { hostname } = window.location;
+  return hostname === 'localhost' || hostname.endsWith('.vercel.app');
+}
+
 export default function Layout() {
   useEffect(() => {
     void registerServiceWorker();
   }, []);
+
+  if (isStandaloneDeployment()) {
+    return <Outlet />;
+  }
 
   return (
     <AuthProvider>
