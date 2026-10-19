@@ -4782,7 +4782,7 @@ svg {
 }
 .drawn-card-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 5px;
   margin-top: auto;
 }
@@ -4797,6 +4797,10 @@ svg {
   background: #e4e8e4;
   color: #64746e;
   font-size: 8px;
+}
+.drawn-card-actions button.return-to-pool {
+  background: #e8e3d5;
+  color: #786f5d;
 }
 .drawn-card-actions button.danger {
   background: #f0e4df;

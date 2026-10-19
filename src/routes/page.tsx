@@ -291,6 +291,17 @@ export default function Page() {
               onHistory={drawHistory =>
                 update(current => ({ ...current, drawHistory }))
               }
+              onReturnCard={cardId =>
+                update(current => ({
+                  ...current,
+                  rewardCards: current.rewardCards.map(card =>
+                    card.id === cardId ? { ...card, drawnAt: undefined } : card,
+                  ),
+                  drawHistory: current.drawHistory.filter(
+                    item => item.cardId !== cardId,
+                  ),
+                }))
+              }
               onDeleteCard={cardId =>
                 update(current => ({
                   ...current,

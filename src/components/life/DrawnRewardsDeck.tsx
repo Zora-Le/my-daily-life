@@ -1,11 +1,18 @@
 import type { RewardCard } from '@/hooks/useLifeStore';
-import { ChevronDown, ChevronUp, Paintbrush, Trash2 } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  Paintbrush,
+  RotateCcw,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 
 interface Props {
   cards: RewardCard[];
   renderFace: (card: RewardCard) => React.ReactNode;
   onEdit: (card: RewardCard) => void;
+  onReturn: (card: RewardCard) => void;
   onDelete: (card: RewardCard) => void;
 }
 
@@ -13,6 +20,7 @@ export function DrawnRewardsDeck({
   cards,
   renderFace,
   onEdit,
+  onReturn,
   onDelete,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
@@ -65,6 +73,15 @@ export function DrawnRewardsDeck({
                 aria-label={`编辑 ${card.title}`}
               >
                 <Paintbrush size={13} /> 编辑
+              </button>
+              <button
+                type="button"
+                className="return-to-pool"
+                disabled={card.id.startsWith('preview-')}
+                onClick={() => onReturn(card)}
+                aria-label={`将 ${card.title} 退回卡池`}
+              >
+                <RotateCcw size={13} /> 退回卡池
               </button>
               <button
                 type="button"

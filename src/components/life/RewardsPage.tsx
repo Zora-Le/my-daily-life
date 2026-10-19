@@ -27,6 +27,7 @@ interface Props {
   onCopy: (value: string) => void;
   onCards: (cards: RewardCard[]) => void;
   onHistory: (items: { cardId: string; drawnAt: string }[]) => void;
+  onReturnCard: (cardId: string) => void;
   onDeleteCard: (cardId: string) => void;
   notify: (text: string) => void;
 }
@@ -104,6 +105,7 @@ export function RewardsPage({
   onCopy,
   onCards,
   onHistory,
+  onReturnCard,
   onDeleteCard,
   notify,
 }: Props) {
@@ -189,6 +191,10 @@ export function RewardsPage({
         cards={displayedDrawn}
         renderFace={card => <CardFace card={card} />}
         onEdit={setEditing}
+        onReturn={card => {
+          onReturnCard(card.id);
+          notify(`“${card.title}”已退回 ${kindLabel(card.kind)} 卡池`);
+        }}
         onDelete={setDeleteTarget}
       />
 
