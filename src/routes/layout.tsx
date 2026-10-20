@@ -15,7 +15,11 @@ function isStandaloneDeployment() {
   }
 
   const { hostname } = window.location;
-  return hostname === 'localhost' || hostname.endsWith('.vercel.app');
+  return (
+    hostname === 'localhost' ||
+    hostname.endsWith('.vercel.app') ||
+    hostname.endsWith('.netlify.app')
+  );
 }
 
 export default function Layout() {
