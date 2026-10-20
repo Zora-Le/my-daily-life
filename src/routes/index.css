@@ -5368,8 +5368,8 @@ svg {
 .week-journal-row {
   position: relative;
   display: grid;
-  grid-template-columns: 76px minmax(0, 1fr);
-  min-height: 76px;
+  grid-template-columns: 84px minmax(0, 1fr);
+  min-height: 52px;
   border-bottom: 1px solid #e8e1d6;
   transition: background 160ms ease;
 }
@@ -5399,38 +5399,49 @@ svg {
 
 .week-journal-date-button {
   width: 100%;
-  min-height: 76px;
-  padding: 14px 8px 10px;
+  min-height: 52px;
+  padding: 10px 8px;
   display: flex;
+  flex-flow: row nowrap;
   align-items: baseline;
   justify-content: center;
   gap: 6px;
   border: 0;
   background: transparent;
   color: #45433e;
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
 }
 
 .week-journal-date-button span {
+  display: inline-block;
+  flex: 0 0 auto;
   color: #88857d;
   font-size: 11px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .week-journal-date-button b {
+  display: inline-block;
+  flex: 0 0 auto;
   font-family: var(--serif);
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .week-journal-tasks {
   min-width: 0;
-  padding: 10px 12px;
+  min-height: 52px;
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 7px;
-  background-image: linear-gradient(to bottom, transparent 31px, rgba(218, 210, 198, 0.28) 32px);
-  background-size: 100% 32px;
+  gap: 5px;
+  background-image: linear-gradient(to bottom, transparent 25px, rgba(218, 210, 198, 0.28) 26px);
+  background-size: 100% 26px;
 }
 
 .week-journal .task-bar {
@@ -5455,7 +5466,7 @@ svg {
 
 .week-journal-empty {
   width: 100%;
-  min-height: 42px;
+  min-height: 28px;
   border: 0;
   background: transparent;
   color: transparent;
@@ -5489,5 +5500,46 @@ svg {
   .week-journal .task-bar {
     padding: 6px 8px;
     font-size: 11px;
+  }
+}
+
+.week-calendar.week-journal {
+  touch-action: pan-x;
+}
+
+.week-journal-row.range {
+  background: #e3efec;
+  box-shadow: inset 3px 0 0 #71898d;
+}
+
+.cycle-action-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  padding: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.025);
+  cursor: default;
+}
+
+@media (max-width: 390px) {
+  .week-journal-row {
+    grid-template-columns: 82px minmax(0, 1fr);
+    min-height: 48px;
+  }
+
+  .week-journal-date-button {
+    min-height: 48px;
+    padding: 8px 6px;
+    gap: 5px;
+  }
+
+  .week-journal-date-button b {
+    font-size: 19px;
+  }
+
+  .week-journal-tasks {
+    min-height: 48px;
+    padding: 5px 8px;
   }
 }

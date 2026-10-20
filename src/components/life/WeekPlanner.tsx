@@ -49,6 +49,9 @@ export function WeekPlanner(props: Props) {
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
   const [taskAction, setTaskAction] = useState<LifeTask | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<LifeTask | null>(null);
+  const [drag, setDrag] = useState<{ start: number; end: number } | null>(null);
+  const journalRef = useRef<HTMLDivElement>(null);
+  const suppressEmptyClickUntilRef = useRef(0);
   const holdTimerRef = useRef<number | null>(null);
   const holdOriginRef = useRef<{ x: number; y: number } | null>(null);
   const heldTaskIdRef = useRef<number | null>(null);
@@ -56,6 +59,27 @@ export function WeekPlanner(props: Props) {
   const openCycle = (iso: string) => {
     props.onSelectDate(iso);
     setEditingCycle(iso);
+  };
+  const pointerDayIndex = (clientY: number) => {
+    const rows = journalRef.current?.querySelectorAll('.week-journal-row');
+    if (!rows?.length) return 0;
+    const index = Array.from(rows).findIndex(row => {
+      const rect = row.getBoundingClientRect();
+      return clientY >= rect.top && clientY <= rect.bottom;
+    });
+    if (index >= 0) return index;
+    const first = rows[0].getBoundingClientRect();
+    return clientY < first.top ? 0 : days.length - 1;
+  };
+  const finishRangeSelection = () => {
+    if (!drag) return;
+    const start = Math.min(drag.start, drag.end);
+    const end = Math.max(drag.start, drag.end);
+    setDrag(null);
+    if (start !== end) {
+      suppressEmptyClickUntilRef.current = Date.now() + 400;
+      props.openTask(days[start], days[end]);
+    }
   };
   const clearTaskHold = () => {
     if (holdTimerRef.current) window.clearTimeout(holdTimerRef.current);
@@ -131,7 +155,36 @@ export function WeekPlanner(props: Props) {
             <Plus size={16} />
           </button>
         </div>
-        <div className="week-calendar week-journal">
+        {editingCycle && (
+          <button
+            type="button"
+            className="cycle-action-overlay"
+            aria-label="关闭生理周期操作"
+            onClick={() => setEditingCycle(null)}
+          />
+        )}
+        <div
+          ref={journalRef}
+          className="week-calendar week-journal"
+          onPointerDown={event => {
+            if (
+              (event.target as HTMLElement).closest(
+                '.task-bar, .week-journal-date, .cycle-action',
+              )
+            )
+              return;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            const index = pointerDayIndex(event.clientY);
+            setDrag({ start: index, end: index });
+          }}
+          onPointerMove={event => {
+            if (!drag) return;
+            event.preventDefault();
+            setDrag({ ...drag, end: pointerDayIndex(event.clientY) });
+          }}
+          onPointerUp={finishRangeSelection}
+          onPointerCancel={() => setDrag(null)}
+        >
           {days.map((iso, index) => {
             const info = cycleDayInfo(iso, props.menstrualRecords);
             const recordedPeriod = info?.phase === '月经期' && !info.predicted;
@@ -140,7 +193,7 @@ export function WeekPlanner(props: Props) {
               .sort((a, b) => a.start.localeCompare(b.start));
             return (
               <div
-                className={`week-journal-row ${iso === TODAY ? 'today' : ''} ${iso === props.selectedDate ? 'selected' : ''}`}
+                className={`week-journal-row ${iso === TODAY ? 'today' : ''} ${iso === props.selectedDate ? 'selected' : ''} ${drag && index >= Math.min(drag.start, drag.end) && index <= Math.max(drag.start, drag.end) ? 'range' : ''}`}
                 key={iso}
               >
                 <div className="week-journal-date">
@@ -215,7 +268,11 @@ export function WeekPlanner(props: Props) {
                   ) : (
                     <button
                       className="week-journal-empty"
-                      onClick={() => props.openTask(iso, iso)}
+                      onClick={() => {
+                        if (Date.now() < suppressEmptyClickUntilRef.current)
+                          return;
+                        props.openTask(iso, iso);
+                      }}
                       aria-label={`为周${weekNames[index]}新增任务`}
                     >
                       <span>添加事项</span>
