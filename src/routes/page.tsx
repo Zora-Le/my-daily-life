@@ -294,6 +294,8 @@ export default function Page() {
               monthlyMoney={
                 previewMode ? previewMonthlyMoney : state.monthlyMoney
               }
+              incomeEntries={state.incomeEntries}
+              largeExpenseEntries={state.largeExpenseEntries}
               pendingExpenses={previewPending}
               onTransactions={moneyTransactions =>
                 update(current => ({ ...current, moneyTransactions }))
@@ -305,6 +307,12 @@ export default function Page() {
                 }
                 update(current => ({ ...current, monthlyMoney }));
               }}
+              onIncomeEntries={incomeEntries =>
+                update(current => ({ ...current, incomeEntries }))
+              }
+              onLargeExpenseEntries={largeExpenseEntries =>
+                update(current => ({ ...current, largeExpenseEntries }))
+              }
               onPendingExpenses={pendingExpenses =>
                 update(current => ({ ...current, pendingExpenses }))
               }

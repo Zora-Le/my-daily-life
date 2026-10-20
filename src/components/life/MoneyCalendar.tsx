@@ -28,6 +28,7 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
     new Date().toISOString().slice(0, 10),
   );
   const [kind, setKind] = useState<MoneyTransaction['kind']>('expense');
+  const [expenseType, setExpenseType] = useState<'daily' | 'special'>('daily');
   const [amount, setAmount] = useState('');
   const [detail, setDetail] = useState('');
   const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
@@ -53,12 +54,10 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
   };
   const submit = () => {
     try {
-      const transaction = createMoneyTransaction(
-        selected,
-        kind,
-        amount,
-        detail,
-      );
+      const transaction = {
+        ...createMoneyTransaction(selected, kind, amount, detail),
+        ...(kind === 'expense' ? { expenseType } : {}),
+      };
       onChange([transaction, ...transactions]);
       setAmount('');
       setDetail('');
@@ -120,11 +119,20 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
         </div>
         {selectedItems.length ? (
           selectedItems.map(item => (
-            <div className="transaction-row" key={item.id}>
+            <div
+              className={`transaction-row ${item.expenseType === 'special' ? 'special-expense' : ''}`}
+              key={item.id}
+            >
               <i className={item.kind} />
               <span>
                 <b>{item.detail}</b>
-                <small>{item.kind === 'income' ? '收入' : '支出'}</small>
+                <small>
+                  {item.kind === 'income'
+                    ? '收入'
+                    : item.expenseType === 'special'
+                      ? '特殊支出'
+                      : '日常支出'}
+                </small>
               </span>
               <strong className={item.kind}>
                 {item.kind === 'income' ? '+' : '-'}¥
@@ -156,6 +164,23 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
               收入
             </button>
           </fieldset>
+          {kind === 'expense' && (
+            <fieldset className="expense-category" aria-label="支出类别">
+              <span>支出类别</span>
+              <button
+                className={expenseType === 'daily' ? 'active' : ''}
+                onClick={() => setExpenseType('daily')}
+              >
+                日常
+              </button>
+              <button
+                className={expenseType === 'special' ? 'active special' : ''}
+                onClick={() => setExpenseType('special')}
+              >
+                特殊
+              </button>
+            </fieldset>
+          )}
           <div className="money-inline-fields">
             <label>
               <span>¥</span>

@@ -1,4 +1,5 @@
 import type {
+  AnnualMoneyEntry,
   ConfigItem,
   MoneyTransaction,
   MonthlyMoney,
@@ -82,10 +83,20 @@ export function monthlyTransactionSummary(
  * 合并图表月度汇总。monthlyMoney 沿用历史存储语义：income/expense 为元；
  * 返回值与 monthlyTransactionSummary 一致，income/expense 均为分。
  */
+export function entryMonthKey(entry: AnnualMoneyEntry): string | null {
+  const value = entry.month.trim();
+  const match = value.match(/^(?:\d{4}[-/.年])?(\d{1,2})\s*月?$/);
+  if (!match) return null;
+  const month = Number(match[1]);
+  if (month < 1 || month > 12) return null;
+  return `${entry.year}-${String(month).padStart(2, '0')}`;
+}
+
 export function mergeMonthlyMoneySummary(
   transactions: MoneyTransaction[],
   manual: MonthlyMoney[],
   anchorMonth: Date | string = new Date(),
+  largeExpenses: AnnualMoneyEntry[] = [],
 ) {
   const anchor =
     typeof anchorMonth === 'string'
@@ -96,13 +107,20 @@ export function mergeMonthlyMoneySummary(
     transactions.map(item => item.date.slice(0, 7)),
   );
   const manualByMonth = new Map(manual.map(item => [item.month, item]));
+  const largeByMonth = new Map<string, number>();
+  for (const entry of largeExpenses) {
+    const month = entryMonthKey(entry);
+    if (!month) continue;
+    largeByMonth.set(month, (largeByMonth.get(month) ?? 0) + entry.amountCents);
+  }
 
   return summary.map(item => {
     const saved = manualByMonth.get(item.month);
+    const largeExpense = largeByMonth.get(item.month) ?? 0;
     if (transactionMonths.has(item.month)) {
       return {
         ...item,
-        largeExpense: Math.round(Number(saved?.largeExpense || 0) * 100),
+        largeExpense,
       };
     }
     return saved
@@ -110,9 +128,9 @@ export function mergeMonthlyMoneySummary(
           month: item.month,
           income: Math.round(Number(saved.income || 0) * 100),
           expense: Math.round(Number(saved.expense || 0) * 100),
-          largeExpense: Math.round(Number(saved.largeExpense || 0) * 100),
+          largeExpense,
         }
-      : item;
+      : { ...item, largeExpense };
   });
 }
 
@@ -120,6 +138,7 @@ export function annualExpenseSummary(
   transactions: MoneyTransaction[],
   manual: MonthlyMoney[],
   year: number,
+  largeExpenses: AnnualMoneyEntry[] = [],
 ) {
   const months = Array.from(
     { length: 12 },
@@ -140,14 +159,17 @@ export function annualExpenseSummary(
     );
   }
 
-  return months.reduce((total, month) => {
+  const monthlyExpense = months.reduce((total, month) => {
     const saved = manualByMonth.get(month);
-    const largeExpense = Math.round(Number(saved?.largeExpense || 0) * 100);
     if (transactionMonths.has(month)) {
-      return total + (transactionTotals.get(month) ?? 0) + largeExpense;
+      return total + (transactionTotals.get(month) ?? 0);
     }
-    return total + Math.round(Number(saved?.expense || 0) * 100) + largeExpense;
+    return total + Math.round(Number(saved?.expense || 0) * 100);
   }, 0);
+  const largeExpense = largeExpenses
+    .filter(entry => entry.year === year)
+    .reduce((total, entry) => total + entry.amountCents, 0);
+  return monthlyExpense + largeExpense;
 }
 
 export function upsertMonthlyMoney(

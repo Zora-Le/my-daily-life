@@ -63,6 +63,13 @@ export type MonthlyMoney = {
   expense: number;
   largeExpense?: number;
 };
+export type AnnualMoneyEntry = {
+  id: number;
+  year: number;
+  month: string;
+  name: string;
+  amountCents: number;
+};
 export type JournalEntry = { id: number; text: string; createdAt: string };
 export type MenstrualRecord = {
   start: string;
@@ -76,6 +83,7 @@ export type MoneyTransaction = {
   amountCents: number;
   amount?: number;
   detail: string;
+  expenseType?: 'daily' | 'special';
 };
 export type PendingExpense = {
   id: number;
@@ -103,6 +111,8 @@ export type LifeState = {
   savings: SavingsIsland[];
   monthlyMoney: MonthlyMoney[];
   moneyTransactions: MoneyTransaction[];
+  incomeEntries: AnnualMoneyEntry[];
+  largeExpenseEntries: AnnualMoneyEntry[];
   pendingExpenses: PendingExpense[];
   progressItems: ConfigItem[];
   habitItems: ConfigItem[];
@@ -172,6 +182,8 @@ export const initialState: LifeState = {
   savings: [],
   monthlyMoney: [],
   moneyTransactions: [],
+  incomeEntries: [],
+  largeExpenseEntries: [],
   pendingExpenses: [],
   progressItems: DEFAULT_PROGRESS_ITEMS,
   habitItems: DEFAULT_HABIT_ITEMS,
@@ -366,6 +378,37 @@ export function normalizeLifeState(parsed: NormalizableLifeState): LifeState {
           : Math.round(Number(item.amount || 0) * 100),
       }))
     : [];
+  const monthlyMoney = Array.isArray(parsed.monthlyMoney)
+    ? parsed.monthlyMoney
+    : [];
+  const normalizedEntries = (raw: unknown): AnnualMoneyEntry[] =>
+    Array.isArray(raw)
+      ? raw
+          .filter(item => item && typeof item === 'object')
+          .map((item, index) => {
+            const entry = item as Partial<AnnualMoneyEntry>;
+            return {
+              id: Number(entry.id) || Date.now() + index,
+              year: Number(entry.year) || new Date().getFullYear(),
+              month: String(entry.month ?? ''),
+              name: String(entry.name ?? ''),
+              amountCents: Number(entry.amountCents) || 0,
+            };
+          })
+      : [];
+  const incomeEntries = normalizedEntries(parsed.incomeEntries);
+  let largeExpenseEntries = normalizedEntries(parsed.largeExpenseEntries);
+  if (!largeExpenseEntries.length) {
+    largeExpenseEntries = monthlyMoney
+      .filter(item => Number(item.largeExpense || 0) > 0)
+      .map((item, index) => ({
+        id: Date.now() + index,
+        year: Number(item.month.slice(0, 4)),
+        month: `${Number(item.month.slice(5))}月`,
+        name: '大额支出',
+        amountCents: Math.round(Number(item.largeExpense || 0) * 100),
+      }));
+  }
   return {
     version: 3,
     days,
@@ -387,8 +430,10 @@ export function normalizeLifeState(parsed: NormalizableLifeState): LifeState {
       typeof parsed.progressText === 'string' ? parsed.progressText : '',
     journals: Array.isArray(parsed.journals) ? parsed.journals : [],
     savings: normalizeSavings(parsed.savings, parsed.platformSavings),
-    monthlyMoney: Array.isArray(parsed.monthlyMoney) ? parsed.monthlyMoney : [],
+    monthlyMoney,
     moneyTransactions: transactions,
+    incomeEntries,
+    largeExpenseEntries,
     pendingExpenses: Array.isArray(parsed.pendingExpenses)
       ? parsed.pendingExpenses
       : [],

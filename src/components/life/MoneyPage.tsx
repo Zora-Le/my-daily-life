@@ -1,4 +1,5 @@
 import type {
+  AnnualMoneyEntry,
   LifeState,
   MoneyTransaction,
   MonthlyMoney,
@@ -23,6 +24,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { AnnualMoneyList } from './AnnualMoneyList';
 import { MoneyCalendar } from './MoneyCalendar';
 import { MonthlyMoneyEditor } from './MonthlyMoneyEditor';
 import { PendingExpenses } from './PendingExpenses';
@@ -33,10 +35,14 @@ interface Props {
   savings: Saving[];
   transactions: MoneyTransaction[];
   monthlyMoney: MonthlyMoney[];
+  incomeEntries: AnnualMoneyEntry[];
+  largeExpenseEntries: AnnualMoneyEntry[];
   pendingExpenses: PendingExpense[];
   onSavings: (items: Saving[]) => void;
   onTransactions: (items: MoneyTransaction[]) => void;
   onMonthlyMoney: (items: MonthlyMoney[]) => void;
+  onIncomeEntries: (items: AnnualMoneyEntry[]) => void;
+  onLargeExpenseEntries: (items: AnnualMoneyEntry[]) => void;
   onPendingExpenses: (items: PendingExpense[]) => void;
   notify: (text: string) => void;
 }
@@ -45,10 +51,14 @@ export function MoneyPage({
   savings,
   transactions,
   monthlyMoney,
+  incomeEntries,
+  largeExpenseEntries,
   pendingExpenses,
   onSavings,
   onTransactions,
   onMonthlyMoney,
+  onIncomeEntries,
+  onLargeExpenseEntries,
   onPendingExpenses,
   notify,
 }: Props) {
@@ -87,19 +97,23 @@ export function MoneyPage({
     setEditingName(id);
   };
   const total = savings.reduce((sum, item) => sum + item.value, 0);
-  const visibleChart = mergeMonthlyMoneySummary(transactions, monthlyMoney).map(
-    item => ({
-      label: `${Number(item.month.slice(5))}月`,
-      income: item.income / 100,
-      expense: item.expense / 100,
-      largeExpense: item.largeExpense / 100,
-    }),
-  );
+  const visibleChart = mergeMonthlyMoneySummary(
+    transactions,
+    monthlyMoney,
+    new Date(),
+    largeExpenseEntries,
+  ).map(item => ({
+    label: `${Number(item.month.slice(5))}月`,
+    income: item.income / 100,
+    expense: item.expense / 100,
+    largeExpense: item.largeExpense / 100,
+  }));
   const availableYears = Array.from(
     new Set([
       new Date().getFullYear(),
       ...transactions.map(item => Number(item.date.slice(0, 4))),
       ...monthlyMoney.map(item => Number(item.month.slice(0, 4))),
+      ...largeExpenseEntries.map(item => item.year),
     ]),
   )
     .filter(Number.isFinite)
@@ -108,6 +122,7 @@ export function MoneyPage({
     transactions,
     monthlyMoney,
     summaryYear,
+    largeExpenseEntries,
   );
   const cancelLongPress = () => {
     if (longPressTimer.current) clearTimeout(longPressTimer.current);
@@ -115,64 +130,79 @@ export function MoneyPage({
   };
   return (
     <>
-      <section className="savings-card narrow">
-        <div className="savings-top">
-          <div>
-            <span className="overline">PLATFORM SAVINGS</span>
-            <h2>平台储蓄</h2>
+      <div className="money-card-stack" aria-label="收支概览卡片">
+        <section className="savings-card narrow money-swipe-card">
+          <div className="savings-top">
+            <div>
+              <span className="overline">PLATFORM SAVINGS</span>
+              <h2>平台储蓄</h2>
+            </div>
+            <button
+              type="button"
+              className="savings-edit-toggle"
+              aria-pressed={editingSavings}
+              onClick={() => {
+                setEditingSavings(active => !active);
+                setEditingName(null);
+              }}
+            >
+              {editingSavings ? '完成' : '编辑'}
+            </button>
           </div>
-          <button
-            type="button"
-            className="savings-edit-toggle"
-            aria-pressed={editingSavings}
-            onClick={() => {
-              setEditingSavings(active => !active);
-              setEditingName(null);
-            }}
-          >
-            {editingSavings ? '完成' : '编辑'}
-          </button>
-        </div>
-        <div className="island-map">
-          <div className="wave wave-one" />
-          <div className="wave wave-two" />
-          <div className="island-list">
-            {savings.map(item => (
-              <SavingsIsland
-                item={item}
-                key={item.id}
-                editMode={editingSavings}
-                editingName={editingName === item.id}
-                onEditingName={active =>
-                  setEditingName(active ? item.id : null)
-                }
-                onName={displayName =>
-                  onSavings(renameSavingsIsland(savings, item.id, displayName))
-                }
-                onAmount={expression => commitSaving(item, expression)}
-                onDelete={() =>
-                  onSavings(deleteSavingsIsland(savings, item.id))
-                }
-              />
-            ))}
-            {!savings.length && !editingSavings && (
-              <button className="add-island" onClick={addIsland}>
-                <Plus size={13} />
-                添加第一个储蓄岛
-              </button>
-            )}
-            {editingSavings && (
-              <button className="add-island" onClick={addIsland}>
-                <Plus size={13} />
-                添加岛屿
-              </button>
-            )}
+          <div className="island-map">
+            <div className="wave wave-one" />
+            <div className="wave wave-two" />
+            <div className="island-list">
+              {savings.map(item => (
+                <SavingsIsland
+                  item={item}
+                  key={item.id}
+                  editMode={editingSavings}
+                  editingName={editingName === item.id}
+                  onEditingName={active =>
+                    setEditingName(active ? item.id : null)
+                  }
+                  onName={displayName =>
+                    onSavings(
+                      renameSavingsIsland(savings, item.id, displayName),
+                    )
+                  }
+                  onAmount={expression => commitSaving(item, expression)}
+                  onDelete={() =>
+                    onSavings(deleteSavingsIsland(savings, item.id))
+                  }
+                />
+              ))}
+              {!savings.length && !editingSavings && (
+                <button className="add-island" onClick={addIsland}>
+                  <Plus size={13} />
+                  添加第一个储蓄岛
+                </button>
+              )}
+              {editingSavings && (
+                <button className="add-island" onClick={addIsland}>
+                  <Plus size={13} />
+                  添加岛屿
+                </button>
+              )}
+            </div>
           </div>
+          <p className="savings-total">
+            总储蓄 <strong>{total.toLocaleString()}</strong> 元
+          </p>
+        </section>
+        <div className="money-swipe-card income-record-card">
+          <AnnualMoneyList
+            title="每月收入记录"
+            overline="MONTHLY INCOME"
+            tone="income"
+            items={incomeEntries}
+            onChange={onIncomeEntries}
+            notify={notify}
+          />
         </div>
-        <p className="savings-total">
-          总储蓄 <strong>{total.toLocaleString()}</strong> 元
-        </p>
-      </section>
+      </div>
+      <p className="money-stack-hint">左右滑动切换卡片</p>
 
       <MoneyCalendar
         transactions={transactions}
@@ -254,6 +284,15 @@ export function MoneyPage({
             </BarChart>
           </ResponsiveContainer>
         </div>
+        <AnnualMoneyList
+          title="大额支出"
+          overline="LARGE EXPENSES"
+          tone="large"
+          compact
+          items={largeExpenseEntries}
+          onChange={onLargeExpenseEntries}
+          notify={notify}
+        />
         <div className="annual-expense-strip">
           <button
             type="button"
