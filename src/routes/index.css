@@ -5440,7 +5440,11 @@ svg {
   flex-direction: column;
   justify-content: center;
   gap: 5px;
-  background-image: linear-gradient(to bottom, transparent 25px, rgba(218, 210, 198, 0.28) 26px);
+  background-image: linear-gradient(
+    to bottom,
+    transparent 25px,
+    rgba(218, 210, 198, 0.28) 26px
+  );
   background-size: 100% 26px;
 }
 
@@ -5542,4 +5546,87 @@ svg {
     min-height: 48px;
     padding: 5px 8px;
   }
+}
+
+/* large expense + compact annual expense summary */
+.money-inline-entry.large-expense .money-inline-fields > button {
+  background: #c88953;
+}
+.money-kind button:nth-child(2).active {
+  color: #a86632;
+}
+.money-day {
+  height: 58px;
+}
+.day-large-expense {
+  color: #c47c3f;
+}
+.transaction-row > i.large-expense {
+  background: #d79a62;
+}
+.transaction-row strong.large-expense {
+  color: #bd7438;
+}
+.bar-legend i:nth-child(3) {
+  background: #d79a62;
+}
+.annual-expense-strip {
+  position: relative;
+  min-height: 38px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #faf8f3;
+  color: #8e8b84;
+  font-size: 8px;
+}
+.annual-year {
+  padding: 3px 7px;
+  border: 0;
+  border-radius: 8px;
+  background: #eee9df;
+  color: #786f65;
+  font-family: var(--serif);
+  font-size: 11px;
+  touch-action: manipulation;
+  user-select: none;
+}
+.annual-expense-strip strong {
+  color: #9a6252;
+  font-family: var(--serif);
+  font-size: 13px;
+  font-weight: 400;
+}
+.annual-year-picker {
+  position: absolute;
+  left: 8px;
+  bottom: calc(100% + 5px);
+  z-index: 8;
+  max-width: calc(100% - 16px);
+  padding: 5px;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #fffdf9;
+  box-shadow: 0 7px 18px rgba(78, 65, 53, 0.12);
+}
+.annual-year-picker button {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #858079;
+  font-size: 9px;
+}
+.annual-year-picker button.active {
+  background: #eee9df;
+  color: #8f5f3b;
 }

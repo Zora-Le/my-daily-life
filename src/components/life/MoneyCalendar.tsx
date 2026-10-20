@@ -27,7 +27,7 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
   const [selected, setSelected] = useState(() =>
     new Date().toISOString().slice(0, 10),
   );
-  const [kind, setKind] = useState<'income' | 'expense'>('expense');
+  const [kind, setKind] = useState<MoneyTransaction['kind']>('expense');
   const [amount, setAmount] = useState('');
   const [detail, setDetail] = useState('');
   const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
@@ -109,6 +109,11 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
               <small className="day-expense">
                 {total.expense ? `-${formatCents(total.expense)}` : ''}
               </small>
+              <small className="day-large-expense">
+                {total['large-expense']
+                  ? `-${formatCents(total['large-expense'])}`
+                  : ''}
+              </small>
             </button>
           );
         })}
@@ -120,11 +125,17 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
         </div>
         {selectedItems.length ? (
           selectedItems.map(item => (
-            <div className="transaction-row" key={item.id}>
+            <div className={`transaction-row ${item.kind}`} key={item.id}>
               <i className={item.kind} />
               <span>
                 <b>{item.detail}</b>
-                <small>{item.kind === 'income' ? '收入' : '支出'}</small>
+                <small>
+                  {item.kind === 'income'
+                    ? '收入'
+                    : item.kind === 'large-expense'
+                      ? '大额支出'
+                      : '支出'}
+                </small>
               </span>
               <strong className={item.kind}>
                 {item.kind === 'income' ? '+' : '-'}¥
@@ -148,6 +159,12 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
               onClick={() => setKind('expense')}
             >
               支出
+            </button>
+            <button
+              className={kind === 'large-expense' ? 'active' : ''}
+              onClick={() => setKind('large-expense')}
+            >
+              大额支出
             </button>
             <button
               className={kind === 'income' ? 'active' : ''}

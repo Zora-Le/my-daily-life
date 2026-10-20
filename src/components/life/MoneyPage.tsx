@@ -5,6 +5,7 @@ import type {
   PendingExpense,
 } from '@/hooks/useLifeStore';
 import {
+  annualExpenseSummary,
   createSavingsIsland,
   deleteSavingsIsland,
   mergeMonthlyMoneySummary,
@@ -12,7 +13,7 @@ import {
 } from '@/lib/lifeRules';
 import { safeCalculate } from '@/lib/lifeUtils';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -53,6 +54,11 @@ export function MoneyPage({
 }: Props) {
   const [editingName, setEditingName] = useState<string | null>(null);
   const [editingSavings, setEditingSavings] = useState(false);
+  const [summaryYear, setSummaryYear] = useState(() =>
+    new Date().getFullYear(),
+  );
+  const [choosingYear, setChoosingYear] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const commitSaving = (item: Saving, expression: string) => {
     try {
       const value = safeCalculate(expression);
@@ -86,8 +92,27 @@ export function MoneyPage({
       label: `${Number(item.month.slice(5))}月`,
       income: item.income / 100,
       expense: item.expense / 100,
+      largeExpense: item.largeExpense / 100,
     }),
   );
+  const availableYears = Array.from(
+    new Set([
+      new Date().getFullYear(),
+      ...transactions.map(item => Number(item.date.slice(0, 4))),
+      ...monthlyMoney.map(item => Number(item.month.slice(0, 4))),
+    ]),
+  )
+    .filter(Number.isFinite)
+    .sort((a, b) => b - a);
+  const annualExpense = annualExpenseSummary(
+    transactions,
+    monthlyMoney,
+    summaryYear,
+  );
+  const cancelLongPress = () => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = null;
+  };
   return (
     <>
       <section className="savings-card narrow">
@@ -173,6 +198,8 @@ export function MoneyPage({
             收入
             <i />
             支出
+            <i />
+            大额
           </span>
         </div>
         <div className="money-chart">
@@ -217,8 +244,60 @@ export function MoneyPage({
                 radius={[5, 5, 2, 2]}
                 maxBarSize={16}
               />
+              <Bar
+                dataKey="largeExpense"
+                name="大额支出"
+                fill="#d79a62"
+                radius={[5, 5, 2, 2]}
+                maxBarSize={16}
+              />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+        <div className="annual-expense-strip">
+          <button
+            type="button"
+            className="annual-year"
+            aria-label="长按切换年度汇总年份"
+            onPointerDown={() => {
+              cancelLongPress();
+              longPressTimer.current = setTimeout(() => {
+                setChoosingYear(true);
+                longPressTimer.current = null;
+              }, 550);
+            }}
+            onPointerUp={cancelLongPress}
+            onPointerLeave={cancelLongPress}
+            onPointerCancel={cancelLongPress}
+            onContextMenu={event => event.preventDefault()}
+          >
+            {summaryYear}年
+          </button>
+          <span>年度支出</span>
+          <strong>
+            ¥
+            {(annualExpense / 100).toLocaleString('zh-CN', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </strong>
+          {choosingYear && (
+            <div className="annual-year-picker">
+              {availableYears.map(year => (
+                <button
+                  type="button"
+                  className={year === summaryYear ? 'active' : ''}
+                  key={year}
+                  onClick={() => {
+                    setSummaryYear(year);
+                    setChoosingYear(false);
+                  }}
+                >
+                  {year}年
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

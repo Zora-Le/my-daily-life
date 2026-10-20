@@ -67,7 +67,7 @@ export type MenstrualRecord = {
 export type MoneyTransaction = {
   id: number;
   date: string;
-  kind: 'income' | 'expense';
+  kind: 'income' | 'expense' | 'large-expense';
   amountCents: number;
   amount?: number;
   detail: string;

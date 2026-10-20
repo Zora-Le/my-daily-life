@@ -32,7 +32,7 @@ export function summarizeTransactions(items: MoneyTransaction[]) {
       sum[item.kind] += transactionCents(item);
       return sum;
     },
-    { income: 0, expense: 0 },
+    { income: 0, expense: 0, 'large-expense': 0 },
   );
 }
 
@@ -49,7 +49,13 @@ export function createMoneyTransaction(
     date,
     kind,
     amountCents: parseMoneyToCents(amount),
-    detail: detail.trim() || (kind === 'income' ? '收入' : '支出'),
+    detail:
+      detail.trim() ||
+      (kind === 'income'
+        ? '收入'
+        : kind === 'large-expense'
+          ? '大额支出'
+          : '支出'),
   };
 }
 
@@ -57,17 +63,24 @@ export function monthlyTransactionSummary(
   items: MoneyTransaction[],
   anchor = new Date(),
 ) {
-  const grouped = new Map<string, { income: number; expense: number }>();
+  const grouped = new Map<
+    string,
+    { income: number; expense: number; largeExpense: number }
+  >();
   for (let offset = 5; offset >= 0; offset -= 1) {
     const date = new Date(anchor.getFullYear(), anchor.getMonth() - offset, 1);
     const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-    grouped.set(month, { income: 0, expense: 0 });
+    grouped.set(month, { income: 0, expense: 0, largeExpense: 0 });
   }
   for (const item of items) {
     const month = item.date.slice(0, 7);
     if (!grouped.has(month)) continue;
     const current = grouped.get(month)!;
-    current[item.kind] += transactionCents(item);
+    if (item.kind === 'large-expense') {
+      current.largeExpense += transactionCents(item);
+    } else {
+      current[item.kind] += transactionCents(item);
+    }
   }
   return [...grouped.entries()].map(([month, totals]) => ({
     month,
@@ -102,9 +115,44 @@ export function mergeMonthlyMoneySummary(
           month: item.month,
           income: Math.round(Number(saved.income || 0) * 100),
           expense: Math.round(Number(saved.expense || 0) * 100),
+          largeExpense: 0,
         }
       : item;
   });
+}
+
+export function annualExpenseSummary(
+  transactions: MoneyTransaction[],
+  manual: MonthlyMoney[],
+  year: number,
+) {
+  const months = Array.from(
+    { length: 12 },
+    (_, index) => `${year}-${String(index + 1).padStart(2, '0')}`,
+  );
+  const transactionMonths = new Set(
+    transactions.map(item => item.date.slice(0, 7)),
+  );
+  const manualByMonth = new Map(manual.map(item => [item.month, item]));
+  const transactionTotals = new Map<string, number>();
+
+  for (const item of transactions) {
+    if (item.kind === 'income' || !item.date.startsWith(`${year}-`)) continue;
+    const month = item.date.slice(0, 7);
+    transactionTotals.set(
+      month,
+      (transactionTotals.get(month) ?? 0) + transactionCents(item),
+    );
+  }
+
+  return months.reduce((total, month) => {
+    if (transactionMonths.has(month)) {
+      return total + (transactionTotals.get(month) ?? 0);
+    }
+    return (
+      total + Math.round(Number(manualByMonth.get(month)?.expense || 0) * 100)
+    );
+  }, 0);
 }
 
 export function upsertMonthlyMoney(
