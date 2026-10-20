@@ -1,0 +1,25 @@
+{
+  "name": "My Daily · My Life",
+  "short_name": "My Daily",
+  "description": "记录日常、心情、进步与生活点滴。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "theme_color": "#efede8",
+  "background_color": "#efede8",
+  "icons": [
+    {
+      "src": "./icons/pwa-cat-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/pwa-cat-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
