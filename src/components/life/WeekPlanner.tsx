@@ -17,7 +17,7 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ConfirmModal } from './ConfirmModal';
 import { type Phase, PhaseIcon } from './LineArt';
 
@@ -37,38 +37,6 @@ interface Props {
   onDeleteTask: (taskId: number) => void;
   openTask: (start: string, end: string) => void;
 }
-type PlacedTask = LifeTask & {
-  columnStart: number;
-  columnEnd: number;
-  lane: number;
-};
-
-function placeTasks(
-  tasks: LifeTask[],
-  first: string,
-  last: string,
-  days: string[],
-) {
-  const laneEnds: number[] = [];
-  return tasks
-    .filter(task => task.start <= last && task.end >= first)
-    .sort(
-      (a, b) => a.start.localeCompare(b.start) || b.end.localeCompare(a.end),
-    )
-    .map(task => {
-      const start = Math.max(
-        0,
-        days.findIndex(day => day >= task.start),
-      );
-      const endIndex = days.findIndex(day => day > task.end);
-      const end = endIndex < 0 ? 7 : endIndex;
-      let lane = laneEnds.findIndex(laneEnd => laneEnd <= start);
-      if (lane < 0) lane = laneEnds.length;
-      laneEnds[lane] = end;
-      return { ...task, columnStart: start + 1, columnEnd: end + 1, lane };
-    });
-}
-
 function CycleIcon({ phase }: { phase?: string }) {
   return phase ? <PhaseIcon phase={phase as Phase} /> : null;
 }
@@ -81,33 +49,10 @@ export function WeekPlanner(props: Props) {
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
   const [taskAction, setTaskAction] = useState<LifeTask | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<LifeTask | null>(null);
-  const [drag, setDrag] = useState<{ start: number; end: number } | null>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
   const holdTimerRef = useRef<number | null>(null);
   const holdOriginRef = useRef<{ x: number; y: number } | null>(null);
   const heldTaskIdRef = useRef<number | null>(null);
   const suppressTaskClickUntilRef = useRef(0);
-  const placed = useMemo(
-    () => placeTasks(props.tasks, days[0], days[6], days),
-    [props.tasks, days.join('|')],
-  );
-  const laneCount = Math.max(3, ...placed.map(task => task.lane + 1));
-  const pointerIndex = (clientX: number) => {
-    const rect = trackRef.current?.getBoundingClientRect();
-    return rect
-      ? Math.max(
-          0,
-          Math.min(6, Math.floor(((clientX - rect.left) / rect.width) * 7)),
-        )
-      : 0;
-  };
-  const finish = () => {
-    if (!drag) return;
-    const start = Math.min(drag.start, drag.end);
-    const end = Math.max(drag.start, drag.end);
-    setDrag(null);
-    props.openTask(days[start], days[end]);
-  };
   const openCycle = (iso: string) => {
     props.onSelectDate(iso);
     setEditingCycle(iso);
@@ -186,17 +131,19 @@ export function WeekPlanner(props: Props) {
             <Plus size={16} />
           </button>
         </div>
-        <div className="week-calendar">
-          <div className="week-date-grid">
-            {days.map((iso, index) => {
-              const info = cycleDayInfo(iso, props.menstrualRecords);
-              const recordedPeriod =
-                info?.phase === '月经期' && !info.predicted;
-              return (
-                <div
-                  className={`week-date ${iso === TODAY ? 'today' : ''} ${iso === props.selectedDate ? 'selected' : ''}`}
-                  key={iso}
-                >
+        <div className="week-calendar week-journal">
+          {days.map((iso, index) => {
+            const info = cycleDayInfo(iso, props.menstrualRecords);
+            const recordedPeriod = info?.phase === '月经期' && !info.predicted;
+            const dayTasks = props.tasks
+              .filter(task => task.start <= iso && task.end >= iso)
+              .sort((a, b) => a.start.localeCompare(b.start));
+            return (
+              <div
+                className={`week-journal-row ${iso === TODAY ? 'today' : ''} ${iso === props.selectedDate ? 'selected' : ''}`}
+                key={iso}
+              >
+                <div className="week-journal-date">
                   <button
                     className={`cycle-marker ${info?.predicted ? 'predicted' : ''}`}
                     data-phase={info?.phase ?? '未记录'}
@@ -206,7 +153,7 @@ export function WeekPlanner(props: Props) {
                     <CycleIcon phase={info?.phase} />
                   </button>
                   <button
-                    className="week-date-button"
+                    className="week-journal-date-button"
                     onClick={() => openCycle(iso)}
                   >
                     <span>周{weekNames[index]}</span>
@@ -244,56 +191,40 @@ export function WeekPlanner(props: Props) {
                     </div>
                   )}
                 </div>
-              );
-            })}
-          </div>
-          <div
-            ref={trackRef}
-            className="week-task-grid"
-            style={{ gridTemplateRows: `repeat(${laneCount}, 27px)` }}
-            onPointerDown={event => {
-              if ((event.target as HTMLElement).closest('.task-bar')) return;
-              event.currentTarget.setPointerCapture(event.pointerId);
-              const index = pointerIndex(event.clientX);
-              setDrag({ start: index, end: index });
-            }}
-            onPointerMove={event =>
-              drag && setDrag({ ...drag, end: pointerIndex(event.clientX) })
-            }
-            onPointerUp={finish}
-            onPointerCancel={() => setDrag(null)}
-          >
-            {days.map((iso, index) => (
-              <div
-                key={iso}
-                className={`task-day-column ${drag && index >= Math.min(drag.start, drag.end) && index <= Math.max(drag.start, drag.end) ? 'range' : ''}`}
-                style={{
-                  gridColumn: index + 1,
-                  gridRow: `1 / ${laneCount + 1}`,
-                }}
-              />
-            ))}
-            {placed.map(task => (
-              <button
-                key={task.id}
-                className={`task-bar ${task.tone} ${task.done ? 'done' : ''}`}
-                style={{
-                  gridColumn: `${task.columnStart} / ${task.columnEnd}`,
-                  gridRow: task.lane + 1,
-                }}
-                onPointerDown={event => startTaskHold(event, task)}
-                onPointerMove={moveTaskHold}
-                onPointerUp={clearTaskHold}
-                onPointerCancel={clearTaskHold}
-                onPointerLeave={clearTaskHold}
-                onContextMenu={event => event.preventDefault()}
-                onClick={() => toggleTask(task)}
-              >
-                {task.done && <Check size={10} />}
-                <span>{task.title}</span>
-              </button>
-            ))}
-          </div>
+                <div
+                  className="week-journal-tasks"
+                  onDoubleClick={() => props.openTask(iso, iso)}
+                >
+                  {dayTasks.length > 0 ? (
+                    dayTasks.map(task => (
+                      <button
+                        key={task.id}
+                        className={`task-bar ${task.tone} ${task.done ? 'done' : ''}`}
+                        onPointerDown={event => startTaskHold(event, task)}
+                        onPointerMove={moveTaskHold}
+                        onPointerUp={clearTaskHold}
+                        onPointerCancel={clearTaskHold}
+                        onPointerLeave={clearTaskHold}
+                        onContextMenu={event => event.preventDefault()}
+                        onClick={() => toggleTask(task)}
+                      >
+                        {task.done && <Check size={11} />}
+                        <span>{task.title}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <button
+                      className="week-journal-empty"
+                      onClick={() => props.openTask(iso, iso)}
+                      aria-label={`为周${weekNames[index]}新增任务`}
+                    >
+                      <span>添加事项</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
       {taskAction && (
