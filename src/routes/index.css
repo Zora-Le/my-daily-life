@@ -21,9 +21,14 @@
   box-sizing: border-box;
 }
 html,
-body {
+body,
+#root {
   margin: 0;
-  min-height: 100%;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+body {
   background: var(--canvas);
   color: var(--ink);
   font-family: LarkCircular, -apple-system, BlinkMacSystemFont, 'PingFang SC',
@@ -41,17 +46,21 @@ svg {
   display: block;
 }
 .app-shell {
-  min-height: 100vh;
+  width: 100%;
+  height: 100dvh;
   display: flex;
   justify-content: center;
   padding: 22px;
+  overflow: hidden;
 }
 .phone-frame {
   position: relative;
   width: 100%;
   max-width: 430px;
-  height: calc(100vh - 44px);
-  min-height: 760px;
+  height: min(900px, calc(100dvh - 44px));
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   background: var(--paper);
   border: 1px solid #dbd8d0;
@@ -59,6 +68,7 @@ svg {
   box-shadow: 0 18px 50px rgba(63, 59, 50, 0.08);
 }
 .app-header {
+  flex: 0 0 94px;
   height: 94px;
   display: flex;
   align-items: center;
@@ -97,10 +107,13 @@ svg {
   background: #f3f1ec;
 }
 .content {
-  height: calc(100% - 174px);
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 20px 104px;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 20px 24px;
   scrollbar-width: none;
   animation: page-in .3s ease-out;
 }
@@ -118,17 +131,17 @@ svg {
   }
 }
 .bottom-nav {
-  position: absolute;
+  position: relative;
+  flex: 0 0 calc(80px + env(safe-area-inset-bottom));
   z-index: 6;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 80px;
+  width: 100%;
+  min-height: 80px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  padding: 8px 15px 10px;
+  padding: 8px 15px calc(10px + env(safe-area-inset-bottom));
   border-top: 1px solid #e9e6df;
   background: rgba(255, 254, 250, 0.97);
+  box-shadow: 0 -8px 24px rgba(63, 59, 50, 0.04);
 }
 .bottom-nav button {
   border: 0;
@@ -1579,8 +1592,8 @@ svg {
   }
   .phone-frame {
     max-width: none;
-    height: 100vh;
-    min-height: 650px;
+    height: 100dvh;
+    min-height: 0;
     border: 0;
     border-radius: 0;
     box-shadow: none;
@@ -2628,6 +2641,76 @@ svg {
   opacity: 0.55;
   text-decoration: line-through;
 }
+.task-action-mask {
+  position: fixed;
+  z-index: 40;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(47, 50, 48, 0.24);
+  backdrop-filter: blur(3px);
+}
+.task-action-menu {
+  position: relative;
+  inset: auto;
+  width: min(394px, 100%);
+  margin: 0;
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 24px;
+  background: var(--paper);
+  box-shadow: 0 18px 54px rgba(53, 59, 59, 0.2);
+  animation: task-menu-in .2s ease-out;
+}
+.task-action-title {
+  display: grid;
+  gap: 4px;
+  padding: 2px 4px 8px;
+}
+.task-action-title small {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .1em;
+}
+.task-action-title strong {
+  overflow: hidden;
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.task-action-menu > button {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #faf8f3;
+  text-align: left;
+}
+.task-action-menu > button.danger {
+  color: #a05754;
+  background: #fbf3f1;
+}
+.task-action-menu > button.cancel {
+  justify-content: center;
+  margin-top: 2px;
+  color: var(--muted);
+  background: transparent;
+}
+@keyframes task-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
 
 .mood-flowers {
   position: absolute;
@@ -3026,6 +3109,39 @@ svg {
 }
 .diet-heading {
   align-items: center;
+}
+.diet-heading-copy {
+  flex: 1;
+  min-width: 0;
+}
+.diet-plan-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 5px;
+}
+.diet-plan-row p {
+  flex: none;
+  margin: 0;
+}
+.diet-plan-row input {
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+  padding: 0 9px;
+  border: 1px solid #dedbd3;
+  border-radius: 10px;
+  outline: none;
+  background: #fbfaf6;
+  font-size: 10px;
+}
+.diet-plan-row input:focus {
+  border-color: #91a29e;
+  box-shadow: 0 0 0 2px rgba(145, 162, 158, 0.12);
+}
+.diet-plan-row input::placeholder {
+  color: #aaa9a2;
 }
 .weight-input {
   display: flex;

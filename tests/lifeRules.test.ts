@@ -62,6 +62,18 @@ assert.equal(normalizedEmpty.rewardCopy, '');
 assert.ok(normalizedEmpty.progressItems.length > 0);
 assert.ok(normalizedEmpty.habitItems.length > 0);
 
+const normalizedDietNotes = normalizeLifeState({
+  days: {
+    '2026-10-20': { dietNote: '目标 52kg，晚餐少油' },
+    '2026-10-21': {},
+  },
+});
+assert.equal(
+  normalizedDietNotes.days['2026-10-20'].dietNote,
+  '目标 52kg，晚餐少油',
+);
+assert.equal(normalizedDietNotes.days['2026-10-21'].dietNote, '');
+
 const requestedStorageKeys: string[] = [];
 const loadedWithoutV2 = loadLifeState({
   getItem(key) {

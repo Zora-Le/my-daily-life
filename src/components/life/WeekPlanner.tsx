@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Droplet,
+  Pencil,
   Plus,
   Trash2,
 } from 'lucide-react';
@@ -32,6 +33,8 @@ interface Props {
   onMarkEnd: (iso: string) => void;
   onRemovePeriod: (iso: string) => void;
   onTasks: (tasks: LifeTask[]) => void;
+  onEditTask: (task: LifeTask) => void;
+  onDeleteTask: (taskId: number) => void;
   openTask: (start: string, end: string) => void;
 }
 type PlacedTask = LifeTask & {
@@ -76,8 +79,14 @@ export function WeekPlanner(props: Props) {
   );
   const [editingCycle, setEditingCycle] = useState<string | null>(null);
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
+  const [taskAction, setTaskAction] = useState<LifeTask | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<LifeTask | null>(null);
   const [drag, setDrag] = useState<{ start: number; end: number } | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const holdTimerRef = useRef<number | null>(null);
+  const holdOriginRef = useRef<{ x: number; y: number } | null>(null);
+  const heldTaskIdRef = useRef<number | null>(null);
+  const suppressTaskClickUntilRef = useRef(0);
   const placed = useMemo(
     () => placeTasks(props.tasks, days[0], days[6], days),
     [props.tasks, days.join('|')],
@@ -102,6 +111,46 @@ export function WeekPlanner(props: Props) {
   const openCycle = (iso: string) => {
     props.onSelectDate(iso);
     setEditingCycle(iso);
+  };
+  const clearTaskHold = () => {
+    if (holdTimerRef.current) window.clearTimeout(holdTimerRef.current);
+    holdTimerRef.current = null;
+    holdOriginRef.current = null;
+  };
+  const startTaskHold = (
+    event: React.PointerEvent<HTMLButtonElement>,
+    task: LifeTask,
+  ) => {
+    event.stopPropagation();
+    holdOriginRef.current = { x: event.clientX, y: event.clientY };
+    holdTimerRef.current = window.setTimeout(() => {
+      heldTaskIdRef.current = task.id;
+      suppressTaskClickUntilRef.current = Date.now() + 800;
+      setTaskAction(task);
+      holdTimerRef.current = null;
+    }, 550);
+  };
+  const moveTaskHold = (event: React.PointerEvent<HTMLButtonElement>) => {
+    const origin = holdOriginRef.current;
+    if (
+      origin &&
+      (Math.abs(event.clientX - origin.x) > 8 ||
+        Math.abs(event.clientY - origin.y) > 8)
+    ) {
+      clearTaskHold();
+    }
+  };
+  const toggleTask = (task: LifeTask) => {
+    const suppressClick =
+      heldTaskIdRef.current === task.id &&
+      Date.now() < suppressTaskClickUntilRef.current;
+    heldTaskIdRef.current = null;
+    if (suppressClick) return;
+    props.onTasks(
+      props.tasks.map(item =>
+        item.id === task.id ? { ...item, done: !item.done } : item,
+      ),
+    );
   };
   return (
     <>
@@ -232,16 +281,13 @@ export function WeekPlanner(props: Props) {
                   gridColumn: `${task.columnStart} / ${task.columnEnd}`,
                   gridRow: task.lane + 1,
                 }}
-                onPointerDown={event => event.stopPropagation()}
-                onClick={() =>
-                  props.onTasks(
-                    props.tasks.map(item =>
-                      item.id === task.id
-                        ? { ...item, done: !item.done }
-                        : item,
-                    ),
-                  )
-                }
+                onPointerDown={event => startTaskHold(event, task)}
+                onPointerMove={moveTaskHold}
+                onPointerUp={clearTaskHold}
+                onPointerCancel={clearTaskHold}
+                onPointerLeave={clearTaskHold}
+                onContextMenu={event => event.preventDefault()}
+                onClick={() => toggleTask(task)}
               >
                 {task.done && <Check size={10} />}
                 <span>{task.title}</span>
@@ -250,6 +296,64 @@ export function WeekPlanner(props: Props) {
           </div>
         </div>
       </section>
+      {taskAction && (
+        <div
+          className="task-action-mask"
+          role="presentation"
+          onPointerDown={() => setTaskAction(null)}
+        >
+          <dialog
+            open
+            className="task-action-menu"
+            aria-label={`${taskAction.title}的任务操作`}
+            onPointerDown={event => event.stopPropagation()}
+          >
+            <div className="task-action-title">
+              <small>任务操作</small>
+              <strong>{taskAction.title}</strong>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                props.onEditTask(taskAction);
+                setTaskAction(null);
+              }}
+            >
+              <Pencil size={16} />
+              编辑名称
+            </button>
+            <button
+              type="button"
+              className="danger"
+              onClick={() => {
+                setDeleteTarget(taskAction);
+                setTaskAction(null);
+              }}
+            >
+              <Trash2 size={16} />
+              删除
+            </button>
+            <button
+              type="button"
+              className="cancel"
+              onClick={() => setTaskAction(null)}
+            >
+              取消
+            </button>
+          </dialog>
+        </div>
+      )}
+      <ConfirmModal
+        open={Boolean(deleteTarget)}
+        title="删除这项任务？"
+        message={`“${deleteTarget?.title ?? ''}”将从周视图和本地数据中彻底移除。`}
+        confirmLabel="确认删除"
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) props.onDeleteTask(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+      />
       <ConfirmModal
         open={Boolean(removeTarget)}
         title="撤销本次经期记录？"

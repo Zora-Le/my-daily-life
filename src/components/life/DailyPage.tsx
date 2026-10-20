@@ -32,6 +32,8 @@ interface Props {
   onWeek: (date: string) => void;
   onDay: (day: DayRecord) => void;
   onTasks: (tasks: LifeTask[]) => void;
+  onEditTask: (task: LifeTask) => void;
+  onDeleteTask: (taskId: number) => void;
   onJournals: (items: JournalEntry[]) => void;
   onMarkPeriodStart: (date: string) => void;
   onMarkPeriodEnd: (date: string) => void;
@@ -53,6 +55,8 @@ export function DailyPage(props: Props) {
     onWeek,
     onDay,
     onTasks,
+    onEditTask,
+    onDeleteTask,
     onJournals,
     onMarkPeriodStart,
     onMarkPeriodEnd,
@@ -98,13 +102,26 @@ export function DailyPage(props: Props) {
         onMarkEnd={onMarkPeriodEnd}
         onRemovePeriod={onRemovePeriod}
         onTasks={onTasks}
+        onEditTask={onEditTask}
+        onDeleteTask={onDeleteTask}
         openTask={openTask}
       />
       <section className="life-section diet-section">
         <div className="section-heading diet-heading">
-          <div>
-            <h2>daily diet</h2>
-            <p>{formatShort(date)}</p>
+          <div className="diet-heading-copy">
+            <h2>Daily diet</h2>
+            <div className="diet-plan-row">
+              <p>{formatShort(date)}</p>
+              <input
+                type="text"
+                aria-label="今日体重目标和饮食规划"
+                value={day.dietNote}
+                onChange={event =>
+                  onDay({ ...day, dietNote: event.target.value })
+                }
+                placeholder="今日体重目标 / 饮食规划"
+              />
+            </div>
           </div>
           <label className="weight-input">
             <input

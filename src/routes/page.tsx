@@ -22,6 +22,7 @@ import { useMemo, useState } from 'react';
 
 type PageKey = 'daily' | 'progress' | 'money' | 'rewards' | 'settings';
 type TaskDraft = {
+  id?: number;
   title: string;
   start: string;
   end: string;
@@ -106,28 +107,41 @@ export default function Page() {
       })[page],
     [page],
   );
-  const addTask = () => {
+  const saveTask = () => {
     if (!draft?.title.trim()) return notify('请先写下任务名称');
     const [start, end] =
       draft.start <= draft.end
         ? [draft.start, draft.end]
         : [draft.end, draft.start];
+    const editing = draft.id !== undefined;
     update(current => ({
       ...current,
-      tasks: [
-        ...current.tasks,
-        {
-          id: Date.now(),
-          title: draft.title.trim(),
-          start,
-          end,
-          done: false,
-          tone: draft.tone,
-        },
-      ],
+      tasks: editing
+        ? current.tasks.map(task =>
+            task.id === draft.id
+              ? {
+                  ...task,
+                  title: draft.title.trim(),
+                  start,
+                  end,
+                  tone: draft.tone,
+                }
+              : task,
+          )
+        : [
+            ...current.tasks,
+            {
+              id: Date.now(),
+              title: draft.title.trim(),
+              start,
+              end,
+              done: false,
+              tone: draft.tone,
+            },
+          ],
     }));
     setDraft(null);
-    notify('任务已加入日历');
+    notify(editing ? '任务名称已更新' : '任务已加入日历');
   };
   const previewTransactions: MoneyTransaction[] = previewMode
     ? [
@@ -201,6 +215,22 @@ export default function Page() {
               onWeek={setWeek}
               onDay={next => updateDay(date, () => next)}
               onTasks={tasks => update(current => ({ ...current, tasks }))}
+              onEditTask={task =>
+                setDraft({
+                  id: task.id,
+                  title: task.title,
+                  start: task.start,
+                  end: task.end,
+                  tone: task.tone,
+                })
+              }
+              onDeleteTask={taskId => {
+                update(current => ({
+                  ...current,
+                  tasks: current.tasks.filter(task => task.id !== taskId),
+                }));
+                notify('任务已删除');
+              }}
               onJournals={journals =>
                 update(current => ({ ...current, journals }))
               }
@@ -360,9 +390,15 @@ export default function Page() {
         <Modal onClose={() => setDraft(null)}>
           <div className="modal-head">
             <div>
-              <span>NEW SCHEDULE</span>
+              <span>
+                {draft.id === undefined ? 'NEW SCHEDULE' : 'EDIT TASK'}
+              </span>
               <h2>
-                {draft.start === draft.end ? '添加单日任务' : '添加连续任务'}
+                {draft.id !== undefined
+                  ? '编辑任务名称'
+                  : draft.start === draft.end
+                    ? '添加单日任务'
+                    : '添加连续任务'}
               </h2>
             </div>
             <button onClick={() => setDraft(null)}>
@@ -405,7 +441,7 @@ export default function Page() {
               />
             ))}
           </div>
-          <button className="primary-action" onClick={addTask}>
+          <button className="primary-action" onClick={saveTask}>
             保存任务
           </button>
         </Modal>
