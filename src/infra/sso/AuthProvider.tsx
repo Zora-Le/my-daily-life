@@ -1,19 +1,14 @@
-import {
-  createContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react';
+import { type ReactNode, createContext, useEffect, useState } from 'react';
 
 import { AccessDeniedPage } from './AccessDeniedPage';
 import {
   AccessDeniedError,
+  type UserResponse,
   checkArtifactSiteAuthorization,
   fetchCurrentUser,
   getAuthService,
   redirectToSSO,
   resolveJwt,
-  type UserResponse,
 } from './auth';
 
 export type AuthContextValue = {
@@ -36,6 +31,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
+    const isPublicNetlifySite =
+      window.location.hostname.endsWith('.netlify.app');
+
+    if (isPublicNetlifySite) {
+      setIsLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
 
     const initAuth = async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -123,7 +127,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, []);
-
 
   const logout = async () => {
     try {
