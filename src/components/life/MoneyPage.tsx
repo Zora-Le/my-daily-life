@@ -104,7 +104,6 @@ export function MoneyPage({
     largeExpenseEntries,
   ).map(item => ({
     label: `${Number(item.month.slice(5))}月`,
-    income: item.income / 100,
     expense: item.expense / 100,
     largeExpense: item.largeExpense / 100,
   }));
@@ -202,7 +201,6 @@ export function MoneyPage({
           />
         </div>
       </div>
-      <p className="money-stack-hint">左右滑动切换卡片</p>
 
       <MoneyCalendar
         transactions={transactions}
@@ -214,7 +212,7 @@ export function MoneyPage({
         <div className="section-heading">
           <div>
             <div className="money-title-row">
-              <h2>月度收支</h2>
+              <h2>月支出</h2>
               <MonthlyMoneyEditor
                 items={monthlyMoney}
                 onChange={onMonthlyMoney}
@@ -224,11 +222,9 @@ export function MoneyPage({
             <p>日明细整月优先 · 单位：元</p>
           </div>
           <span className="bar-legend">
-            <i />
-            收入
-            <i />
+            <i className="expense" />
             支出
-            <i />
+            <i className="large" />
             大额
           </span>
         </div>
@@ -259,13 +255,6 @@ export function MoneyPage({
                   borderRadius: 12,
                   fontSize: 11,
                 }}
-              />
-              <Bar
-                dataKey="income"
-                name="收入"
-                fill="#91aaa0"
-                radius={[5, 5, 2, 2]}
-                maxBarSize={16}
               />
               <Bar
                 dataKey="expense"

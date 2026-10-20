@@ -20,12 +20,10 @@ const validAmount = (value: string) =>
 export function MonthlyMoneyEditor({ items, onChange, notify }: Props) {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(currentMonth);
-  const [income, setIncome] = useState('');
   const [expense, setExpense] = useState('');
 
   useEffect(() => {
     const saved = items.find(item => item.month === month);
-    setIncome(saved ? String(saved.income) : '');
     setExpense(saved ? String(saved.expense) : '');
   }, [items, month]);
 
@@ -43,19 +41,19 @@ export function MonthlyMoneyEditor({ items, onChange, notify }: Props) {
       notify('请选择当前或更早的月份');
       return;
     }
-    if (!validAmount(income) || !validAmount(expense)) {
+    if (!validAmount(expense)) {
       notify('金额需为非负数，最多保留两位小数');
       return;
     }
     onChange(
       upsertMonthlyMoney(items, {
         month,
-        income: Number(income || 0),
+        income: items.find(item => item.month === month)?.income ?? 0,
         expense: Number(expense || 0),
       }),
     );
     setOpen(false);
-    notify('月度收支已保存');
+    notify('月支出已保存');
   };
 
   return (
@@ -64,7 +62,7 @@ export function MonthlyMoneyEditor({ items, onChange, notify }: Props) {
         type="button"
         className="monthly-edit-button"
         onClick={() => setOpen(true)}
-        aria-label="编辑历史月度收支"
+        aria-label="编辑历史月支出"
       >
         <Pencil size={12} />
         编辑历史
@@ -86,7 +84,7 @@ export function MonthlyMoneyEditor({ items, onChange, notify }: Props) {
               <div className="monthly-money-head">
                 <div>
                   <span>MONTHLY RECORD</span>
-                  <h2 id="monthly-money-title">编辑历史月度收支</h2>
+                  <h2 id="monthly-money-title">编辑历史月支出</h2>
                 </div>
                 <button
                   type="button"
@@ -110,17 +108,7 @@ export function MonthlyMoneyEditor({ items, onChange, notify }: Props) {
               </label>
               <div className="monthly-money-fields">
                 <label>
-                  总收入（元）
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={income}
-                    placeholder="0.00"
-                    onChange={event => setIncome(event.target.value.trim())}
-                  />
-                </label>
-                <label>
-                  总支出（元）
+                  月支出（元）
                   <input
                     type="text"
                     inputMode="decimal"

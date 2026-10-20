@@ -5314,7 +5314,7 @@ svg {
 }
 .monthly-money-fields {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
   margin-top: 14px;
 }
@@ -5621,13 +5621,15 @@ svg {
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
-  padding: 3px 13px 10px 2px;
+  padding: 3px 0 10px;
 }
 .money-card-stack::-webkit-scrollbar {
   display: none;
 }
 .money-swipe-card {
-  min-width: calc(100% - 18px);
+  min-width: 100%;
+  flex: 0 0 100%;
+  box-sizing: border-box;
   scroll-snap-align: start;
 }
 .money-card-stack .savings-card {
@@ -5845,4 +5847,16 @@ svg {
 }
 .transaction-row.special-expense strong {
   color: #bd6d85;
+}
+
+.bar-legend i.expense {
+  background: #d4a99e;
+}
+.bar-legend i.large {
+  background: #d79a62;
+}
+.expense-entry-label {
+  color: #8b7770;
+  font-family: var(--serif);
+  font-size: 12px;
 }
