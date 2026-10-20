@@ -94,16 +94,14 @@ export function MealGallery({ label, images, onChange, notify }: Props) {
         <div
           className="image-lightbox"
           role="presentation"
-          onPointerDown={() => setPreview(null)}
+          onClick={event => {
+            if (event.target === event.currentTarget) setPreview(null);
+          }}
         >
           <button onClick={() => setPreview(null)} aria-label="关闭大图">
             <X size={20} />
           </button>
-          <img
-            src={preview}
-            alt={`${label}完整图片`}
-            onPointerDown={event => event.stopPropagation()}
-          />
+          <img src={preview} alt={`${label}完整图片`} />
         </div>
       )}
       <ConfirmModal
