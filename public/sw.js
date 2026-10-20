@@ -1,18 +1,24 @@
-const CACHE_VERSION = 'my-daily-v2';
+const CACHE_VERSION = 'my-daily-v3';
 const PRECACHE_NAME = `${CACHE_VERSION}-precache`;
 const RUNTIME_NAME = `${CACHE_VERSION}-runtime`;
+const BASE_PATH = new URL(self.registration.scope).pathname;
+const appPath = path => `${BASE_PATH}${path.replace(/^\//, '')}`;
 const PRECACHE_URLS = [
-  '/',
-  '/manifest.json',
-  '/icons/pwa-cat-192.png',
-  '/icons/pwa-cat-512.png',
+  appPath(''),
+  appPath('manifest.json'),
+  appPath('icons/pwa-cat-192.png'),
+  appPath('icons/pwa-cat-512.png'),
 ];
 
 const isCacheableResponse = response =>
   response.ok && response.status === 200 && response.type !== 'opaque';
 
-const isSensitivePath = pathname =>
-  /^\/(api|auth|login|logout|oauth|sso)(\/|$)/i.test(pathname);
+const isSensitivePath = pathname => {
+  const relativePath = pathname.startsWith(BASE_PATH)
+    ? pathname.slice(BASE_PATH.length)
+    : pathname.replace(/^\/+/, '');
+  return /^(api|auth|login|logout|oauth|sso)(\/|$)/i.test(relativePath);
+};
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -60,13 +66,13 @@ const networkFirstNavigation = async request => {
     if (isCacheableResponse(response)) {
       const cache = await caches.open(RUNTIME_NAME);
       await cache.put(request, response.clone());
-      await cache.put('/', response.clone());
+      await cache.put(appPath(''), response.clone());
     }
     return response;
   } catch {
     return (
       (await caches.match(request)) ||
-      (await caches.match('/')) ||
+      (await caches.match(appPath(''))) ||
       new Response('当前处于离线状态，请恢复网络后重试。', {
         status: 503,
         headers: { 'Content-Type': 'text/plain; charset=utf-8' },

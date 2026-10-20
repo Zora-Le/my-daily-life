@@ -7,6 +7,7 @@
     "setup": "pnpm run reset && pnpm install",
     "dev": "edenx dev",
     "build": "edenx build",
+    "build:github-pages": "GITHUB_PAGES_BASE_PATH=/my-daily-life/ pnpm run build",
     "postbuild": "node scripts/preparePwaDist.mjs",
     "start": "edenx start",
     "serve": "edenx serve",
