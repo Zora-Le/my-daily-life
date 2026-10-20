@@ -96,16 +96,15 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
             return <span className="money-day empty" key={cell.key} />;
           const iso = `${month}-${String(cell.day).padStart(2, '0')}`;
           const dayItems = byDay.get(iso) ?? [];
-          const daily = summarizeTransactions(
+          const expense = summarizeTransactions(
             dayItems.filter(
               item =>
-                item.kind === 'expense' &&
-                (!item.expenseType || item.expenseType === 'daily'),
+                item.kind === 'expense' && item.expenseType !== 'reimbursement',
             ),
           ).expense;
-          const special = summarizeTransactions(
-            dayItems.filter(item => item.expenseType === 'special'),
-          ).expense;
+          const hasSpecial = dayItems.some(
+            item => item.expenseType === 'special',
+          );
           const reimbursement = summarizeTransactions(
             dayItems.filter(item => item.expenseType === 'reimbursement'),
           ).expense;
@@ -116,11 +115,10 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
               onClick={() => setSelected(iso)}
             >
               <b>{cell.day}</b>
-              <small className="day-expense">
-                {daily ? `-${formatCents(daily)}` : ''}
-              </small>
-              <small className="day-special-expense">
-                {special ? `-${formatCents(special)}` : ''}
+              <small
+                className={hasSpecial ? 'day-special-expense' : 'day-expense'}
+              >
+                {expense ? `-${formatCents(expense)}` : ''}
               </small>
               <small className="day-reimbursement">
                 {reimbursement ? `-${formatCents(reimbursement)}` : ''}
