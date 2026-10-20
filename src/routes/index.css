@@ -5314,8 +5314,8 @@ svg {
 }
 .monthly-money-fields {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
   margin-top: 14px;
 }
 .monthly-money-actions {
@@ -5549,24 +5549,6 @@ svg {
 }
 
 /* large expense + compact annual expense summary */
-.money-inline-entry.large-expense .money-inline-fields > button {
-  background: #c88953;
-}
-.money-kind button:nth-child(2).active {
-  color: #a86632;
-}
-.money-day {
-  height: 58px;
-}
-.day-large-expense {
-  color: #c47c3f;
-}
-.transaction-row > i.large-expense {
-  background: #d79a62;
-}
-.transaction-row strong.large-expense {
-  color: #bd7438;
-}
 .bar-legend i:nth-child(3) {
   background: #d79a62;
 }

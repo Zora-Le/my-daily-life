@@ -22,11 +22,13 @@ export function MonthlyMoneyEditor({ items, onChange, notify }: Props) {
   const [month, setMonth] = useState(currentMonth);
   const [income, setIncome] = useState('');
   const [expense, setExpense] = useState('');
+  const [largeExpense, setLargeExpense] = useState('');
 
   useEffect(() => {
     const saved = items.find(item => item.month === month);
     setIncome(saved ? String(saved.income) : '');
     setExpense(saved ? String(saved.expense) : '');
+    setLargeExpense(saved?.largeExpense ? String(saved.largeExpense) : '');
   }, [items, month]);
 
   useEffect(() => {
@@ -43,7 +45,11 @@ export function MonthlyMoneyEditor({ items, onChange, notify }: Props) {
       notify('请选择当前或更早的月份');
       return;
     }
-    if (!validAmount(income) || !validAmount(expense)) {
+    if (
+      !validAmount(income) ||
+      !validAmount(expense) ||
+      !validAmount(largeExpense)
+    ) {
       notify('金额需为非负数，最多保留两位小数');
       return;
     }
@@ -52,6 +58,7 @@ export function MonthlyMoneyEditor({ items, onChange, notify }: Props) {
         month,
         income: Number(income || 0),
         expense: Number(expense || 0),
+        largeExpense: Number(largeExpense || 0),
       }),
     );
     setOpen(false);
@@ -127,6 +134,18 @@ export function MonthlyMoneyEditor({ items, onChange, notify }: Props) {
                     value={expense}
                     placeholder="0.00"
                     onChange={event => setExpense(event.target.value.trim())}
+                  />
+                </label>
+                <label>
+                  大额支出（元）
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={largeExpense}
+                    placeholder="0.00"
+                    onChange={event =>
+                      setLargeExpense(event.target.value.trim())
+                    }
                   />
                 </label>
               </div>

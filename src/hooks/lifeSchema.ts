@@ -57,7 +57,12 @@ export type RewardCard = {
   image?: string;
   drawnAt?: string;
 };
-export type MonthlyMoney = { month: string; income: number; expense: number };
+export type MonthlyMoney = {
+  month: string;
+  income: number;
+  expense: number;
+  largeExpense?: number;
+};
 export type JournalEntry = { id: number; text: string; createdAt: string };
 export type MenstrualRecord = {
   start: string;
@@ -67,7 +72,7 @@ export type MenstrualRecord = {
 export type MoneyTransaction = {
   id: number;
   date: string;
-  kind: 'income' | 'expense' | 'large-expense';
+  kind: 'income' | 'expense';
   amountCents: number;
   amount?: number;
   detail: string;

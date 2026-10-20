@@ -32,7 +32,7 @@ export function summarizeTransactions(items: MoneyTransaction[]) {
       sum[item.kind] += transactionCents(item);
       return sum;
     },
-    { income: 0, expense: 0, 'large-expense': 0 },
+    { income: 0, expense: 0 },
   );
 }
 
@@ -49,13 +49,7 @@ export function createMoneyTransaction(
     date,
     kind,
     amountCents: parseMoneyToCents(amount),
-    detail:
-      detail.trim() ||
-      (kind === 'income'
-        ? '收入'
-        : kind === 'large-expense'
-          ? '大额支出'
-          : '支出'),
+    detail: detail.trim() || (kind === 'income' ? '收入' : '支出'),
   };
 }
 
@@ -76,11 +70,7 @@ export function monthlyTransactionSummary(
     const month = item.date.slice(0, 7);
     if (!grouped.has(month)) continue;
     const current = grouped.get(month)!;
-    if (item.kind === 'large-expense') {
-      current.largeExpense += transactionCents(item);
-    } else {
-      current[item.kind] += transactionCents(item);
-    }
+    current[item.kind] += transactionCents(item);
   }
   return [...grouped.entries()].map(([month, totals]) => ({
     month,
@@ -108,14 +98,19 @@ export function mergeMonthlyMoneySummary(
   const manualByMonth = new Map(manual.map(item => [item.month, item]));
 
   return summary.map(item => {
-    if (transactionMonths.has(item.month)) return item;
     const saved = manualByMonth.get(item.month);
+    if (transactionMonths.has(item.month)) {
+      return {
+        ...item,
+        largeExpense: Math.round(Number(saved?.largeExpense || 0) * 100),
+      };
+    }
     return saved
       ? {
           month: item.month,
           income: Math.round(Number(saved.income || 0) * 100),
           expense: Math.round(Number(saved.expense || 0) * 100),
-          largeExpense: 0,
+          largeExpense: Math.round(Number(saved.largeExpense || 0) * 100),
         }
       : item;
   });
@@ -146,12 +141,12 @@ export function annualExpenseSummary(
   }
 
   return months.reduce((total, month) => {
+    const saved = manualByMonth.get(month);
+    const largeExpense = Math.round(Number(saved?.largeExpense || 0) * 100);
     if (transactionMonths.has(month)) {
-      return total + (transactionTotals.get(month) ?? 0);
+      return total + (transactionTotals.get(month) ?? 0) + largeExpense;
     }
-    return (
-      total + Math.round(Number(manualByMonth.get(month)?.expense || 0) * 100)
-    );
+    return total + Math.round(Number(saved?.expense || 0) * 100) + largeExpense;
   }, 0);
 }
 
