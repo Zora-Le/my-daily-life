@@ -27,6 +27,12 @@ export const formatShort = (iso: string) => {
   return `${date.getMonth() + 1}月${date.getDate()}日`;
 };
 
+export const formatLong = (iso: string) => {
+  const date = fromIso(iso);
+  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${weekdays[date.getDay()]}`;
+};
+
 export function safeCalculate(raw: string): number {
   const source = raw.trim().replace(/^=/, '');
   if (!source || !/^[\d.+\-*/()\s]+$/.test(source))

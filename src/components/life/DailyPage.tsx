@@ -6,7 +6,7 @@ import type {
   Meal,
   MenstrualRecord,
 } from '@/hooks/useLifeStore';
-import { TODAY, formatShort, weekStart } from '@/lib/lifeUtils';
+import { TODAY, formatLong, formatShort, weekStart } from '@/lib/lifeUtils';
 import { RotateCcw } from 'lucide-react';
 import { HabitCheckins } from './HabitCheckins';
 import { JournalDrawer } from './JournalDrawer';
@@ -78,11 +78,15 @@ export function DailyPage(props: Props) {
       <div className="date-toolbar">
         <label>
           <span>正在记录</span>
-          <input
-            type="date"
-            value={date}
-            onChange={event => selectDate(event.target.value)}
-          />
+          <span className="date-picker">
+            <span className="date-display">{formatLong(date)}</span>
+            <input
+              type="date"
+              aria-label="选择记录日期"
+              value={date}
+              onChange={event => selectDate(event.target.value)}
+            />
+          </span>
         </label>
         {date !== TODAY && (
           <button onClick={() => selectDate(TODAY)}>
