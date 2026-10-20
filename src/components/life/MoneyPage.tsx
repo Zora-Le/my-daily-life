@@ -101,11 +101,10 @@ export function MoneyPage({
     transactions,
     monthlyMoney,
     new Date(),
-    largeExpenseEntries,
   ).map(item => ({
     label: `${Number(item.month.slice(5))}月`,
     expense: item.expense / 100,
-    largeExpense: item.largeExpense / 100,
+    budget: item.budget / 100,
   }));
   const availableYears = Array.from(
     new Set([
@@ -224,8 +223,8 @@ export function MoneyPage({
           <span className="bar-legend">
             <i className="expense" />
             支出
-            <i className="large" />
-            大额
+            <i className="budget" />
+            定额
           </span>
         </div>
         <div className="money-chart">
@@ -264,9 +263,9 @@ export function MoneyPage({
                 maxBarSize={16}
               />
               <Bar
-                dataKey="largeExpense"
-                name="大额支出"
-                fill="#d79a62"
+                dataKey="budget"
+                name="本月定额"
+                fill="#8fae8f"
                 radius={[5, 5, 2, 2]}
                 maxBarSize={16}
               />

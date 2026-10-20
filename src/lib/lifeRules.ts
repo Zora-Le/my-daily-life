@@ -70,6 +70,9 @@ export function monthlyTransactionSummary(
   for (const item of items) {
     const month = item.date.slice(0, 7);
     if (!grouped.has(month)) continue;
+    if (item.kind === 'expense' && item.expenseType === 'reimbursement') {
+      continue;
+    }
     const current = grouped.get(month)!;
     current[item.kind] += transactionCents(item);
   }
@@ -96,7 +99,6 @@ export function mergeMonthlyMoneySummary(
   transactions: MoneyTransaction[],
   manual: MonthlyMoney[],
   anchorMonth: Date | string = new Date(),
-  largeExpenses: AnnualMoneyEntry[] = [],
 ) {
   const anchor =
     typeof anchorMonth === 'string'
@@ -104,33 +106,29 @@ export function mergeMonthlyMoneySummary(
       : anchorMonth;
   const summary = monthlyTransactionSummary(transactions, anchor);
   const transactionMonths = new Set(
-    transactions.map(item => item.date.slice(0, 7)),
+    transactions
+      .filter(
+        item => item.kind === 'expense' && item.expenseType !== 'reimbursement',
+      )
+      .map(item => item.date.slice(0, 7)),
   );
   const manualByMonth = new Map(manual.map(item => [item.month, item]));
-  const largeByMonth = new Map<string, number>();
-  for (const entry of largeExpenses) {
-    const month = entryMonthKey(entry);
-    if (!month) continue;
-    largeByMonth.set(month, (largeByMonth.get(month) ?? 0) + entry.amountCents);
-  }
 
   return summary.map(item => {
     const saved = manualByMonth.get(item.month);
-    const largeExpense = largeByMonth.get(item.month) ?? 0;
+    const budget = Math.round(Number(saved?.budget || 0) * 100);
     if (transactionMonths.has(item.month)) {
-      return {
-        ...item,
-        largeExpense,
-      };
+      return { ...item, budget };
     }
     return saved
       ? {
           month: item.month,
           income: Math.round(Number(saved.income || 0) * 100),
           expense: Math.round(Number(saved.expense || 0) * 100),
-          largeExpense,
+          largeExpense: 0,
+          budget,
         }
-      : { ...item, largeExpense };
+      : { ...item, budget };
   });
 }
 
@@ -145,13 +143,22 @@ export function annualExpenseSummary(
     (_, index) => `${year}-${String(index + 1).padStart(2, '0')}`,
   );
   const transactionMonths = new Set(
-    transactions.map(item => item.date.slice(0, 7)),
+    transactions
+      .filter(
+        item => item.kind === 'expense' && item.expenseType !== 'reimbursement',
+      )
+      .map(item => item.date.slice(0, 7)),
   );
   const manualByMonth = new Map(manual.map(item => [item.month, item]));
   const transactionTotals = new Map<string, number>();
 
   for (const item of transactions) {
-    if (item.kind === 'income' || !item.date.startsWith(`${year}-`)) continue;
+    if (
+      item.kind === 'income' ||
+      item.expenseType === 'reimbursement' ||
+      !item.date.startsWith(`${year}-`)
+    )
+      continue;
     const month = item.date.slice(0, 7);
     transactionTotals.set(
       month,

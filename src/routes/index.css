@@ -5314,7 +5314,7 @@ svg {
 }
 .monthly-money-fields {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-top: 14px;
 }
@@ -5859,4 +5859,34 @@ svg {
   color: #8b7770;
   font-family: var(--serif);
   font-size: 12px;
+}
+
+/* expense categories: daily / special / reimbursement */
+.money-day {
+  height: 66px;
+}
+.day-special-expense {
+  color: #cf7893;
+}
+.day-reimbursement {
+  color: #79a9bd;
+}
+.expense-category button.active.special {
+  border-color: #d98ca5;
+  background: #fae4ec;
+  color: #b95776;
+}
+.expense-category button.active.reimbursement {
+  border-color: #91bccc;
+  background: #e8f3f7;
+  color: #568da3;
+}
+.transaction-row.reimbursement-expense > i {
+  background: #87b6c8;
+}
+.transaction-row.reimbursement-expense strong {
+  color: #5f9bb2;
+}
+.bar-legend i.budget {
+  background: #8fae8f;
 }

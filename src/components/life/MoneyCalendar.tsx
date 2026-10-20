@@ -27,7 +27,9 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
   const [selected, setSelected] = useState(() =>
     new Date().toISOString().slice(0, 10),
   );
-  const [expenseType, setExpenseType] = useState<'daily' | 'special'>('daily');
+  const [expenseType, setExpenseType] = useState<
+    'daily' | 'special' | 'reimbursement'
+  >('daily');
   const [amount, setAmount] = useState('');
   const [detail, setDetail] = useState('');
   const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
@@ -93,7 +95,20 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
           if (!cell.day)
             return <span className="money-day empty" key={cell.key} />;
           const iso = `${month}-${String(cell.day).padStart(2, '0')}`;
-          const total = summarizeTransactions(byDay.get(iso) ?? []);
+          const dayItems = byDay.get(iso) ?? [];
+          const daily = summarizeTransactions(
+            dayItems.filter(
+              item =>
+                item.kind === 'expense' &&
+                (!item.expenseType || item.expenseType === 'daily'),
+            ),
+          ).expense;
+          const special = summarizeTransactions(
+            dayItems.filter(item => item.expenseType === 'special'),
+          ).expense;
+          const reimbursement = summarizeTransactions(
+            dayItems.filter(item => item.expenseType === 'reimbursement'),
+          ).expense;
           return (
             <button
               className={`money-day ${selected === iso ? 'selected' : ''}`}
@@ -101,11 +116,14 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
               onClick={() => setSelected(iso)}
             >
               <b>{cell.day}</b>
-              <small className="day-income">
-                {total.income ? `+${formatCents(total.income)}` : ''}
-              </small>
               <small className="day-expense">
-                {total.expense ? `-${formatCents(total.expense)}` : ''}
+                {daily ? `-${formatCents(daily)}` : ''}
+              </small>
+              <small className="day-special-expense">
+                {special ? `-${formatCents(special)}` : ''}
+              </small>
+              <small className="day-reimbursement">
+                {reimbursement ? `-${formatCents(reimbursement)}` : ''}
               </small>
             </button>
           );
@@ -119,7 +137,13 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
         {selectedItems.length ? (
           selectedItems.map(item => (
             <div
-              className={`transaction-row ${item.expenseType === 'special' ? 'special-expense' : ''}`}
+              className={`transaction-row ${
+                item.expenseType === 'special'
+                  ? 'special-expense'
+                  : item.expenseType === 'reimbursement'
+                    ? 'reimbursement-expense'
+                    : ''
+              }`}
               key={item.id}
             >
               <i className={item.kind} />
@@ -128,9 +152,11 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
                 <small>
                   {item.kind === 'income'
                     ? '收入'
-                    : item.expenseType === 'special'
-                      ? '特殊支出'
-                      : '日常支出'}
+                    : item.expenseType === 'reimbursement'
+                      ? '报销支出'
+                      : item.expenseType === 'special'
+                        ? '特殊支出'
+                        : '日常支出'}
                 </small>
               </span>
               <strong className={item.kind}>
@@ -163,6 +189,14 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
               onClick={() => setExpenseType('special')}
             >
               特殊
+            </button>
+            <button
+              className={
+                expenseType === 'reimbursement' ? 'active reimbursement' : ''
+              }
+              onClick={() => setExpenseType('reimbursement')}
+            >
+              报销
             </button>
           </fieldset>
           <div className="money-inline-fields">

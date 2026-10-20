@@ -61,6 +61,7 @@ export type MonthlyMoney = {
   month: string;
   income: number;
   expense: number;
+  budget?: number;
   largeExpense?: number;
 };
 export type AnnualMoneyEntry = {
@@ -83,7 +84,7 @@ export type MoneyTransaction = {
   amountCents: number;
   amount?: number;
   detail: string;
-  expenseType?: 'daily' | 'special';
+  expenseType?: 'daily' | 'special' | 'reimbursement';
 };
 export type PendingExpense = {
   id: number;

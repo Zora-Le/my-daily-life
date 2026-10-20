@@ -21,10 +21,12 @@ export function MonthlyMoneyEditor({ items, onChange, notify }: Props) {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(currentMonth);
   const [expense, setExpense] = useState('');
+  const [budget, setBudget] = useState('');
 
   useEffect(() => {
     const saved = items.find(item => item.month === month);
     setExpense(saved ? String(saved.expense) : '');
+    setBudget(saved?.budget ? String(saved.budget) : '');
   }, [items, month]);
 
   useEffect(() => {
@@ -41,7 +43,7 @@ export function MonthlyMoneyEditor({ items, onChange, notify }: Props) {
       notify('请选择当前或更早的月份');
       return;
     }
-    if (!validAmount(expense)) {
+    if (!validAmount(expense) || !validAmount(budget)) {
       notify('金额需为非负数，最多保留两位小数');
       return;
     }
@@ -50,6 +52,7 @@ export function MonthlyMoneyEditor({ items, onChange, notify }: Props) {
         month,
         income: items.find(item => item.month === month)?.income ?? 0,
         expense: Number(expense || 0),
+        budget: Number(budget || 0),
       }),
     );
     setOpen(false);
@@ -115,6 +118,16 @@ export function MonthlyMoneyEditor({ items, onChange, notify }: Props) {
                     value={expense}
                     placeholder="0.00"
                     onChange={event => setExpense(event.target.value.trim())}
+                  />
+                </label>
+                <label>
+                  本月定额（元）
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={budget}
+                    placeholder="0.00"
+                    onChange={event => setBudget(event.target.value.trim())}
                   />
                 </label>
               </div>
