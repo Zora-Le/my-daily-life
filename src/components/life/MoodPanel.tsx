@@ -56,7 +56,7 @@ function MonthOverview({
   const total = new Date(year, month + 1, 0).getDate();
   const offset = (new Date(year, month, 1).getDay() + 6) % 7;
   return (
-    <div className="modal-mask" onPointerDown={onClose}>
+    <div className="modal-mask mood-modal-mask" onPointerDown={onClose}>
       <div
         className="mood-month"
         onPointerDown={event => event.stopPropagation()}
