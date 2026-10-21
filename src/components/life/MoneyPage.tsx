@@ -109,6 +109,11 @@ export function MoneyPage({
     expense: item.expense / 100,
     budget: item.budget / 100,
   }));
+  const chartValues = visibleChart.flatMap(item => [item.expense, item.budget]);
+  const chartPeak = Math.max(1, ...chartValues);
+  const chartStep = Math.max(250, Math.ceil(chartPeak / 4 / 250) * 250);
+  const chartMax = chartStep * 4;
+  const chartTicks = Array.from({ length: 5 }, (_, index) => index * chartStep);
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       const element = chartScrollRef.current;
@@ -237,54 +242,75 @@ export function MoneyPage({
             定额
           </span>
         </div>
-        <div className="money-chart-scroll" ref={chartScrollRef}>
-          <div
-            className="money-chart"
-            style={{ width: `${Math.max(visibleChart.length * 72, 320)}px` }}
-          >
+        <div className="money-chart-frame">
+          <div className="money-chart-y-axis" aria-hidden="true">
             <ResponsiveContainer width="100%" height={210}>
               <BarChart
                 data={visibleChart}
-                barGap={4}
-                margin={{ top: 10, right: 4, left: -12, bottom: 0 }}
+                margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
               >
-                <CartesianGrid stroke="#ece9e3" vertical={false} />
-                <XAxis
-                  dataKey="label"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#85827d', fontSize: 10 }}
-                />
+                <XAxis dataKey="label" hide height={30} />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: '#aaa59d', fontSize: 9 }}
-                />
-                <Tooltip
-                  cursor={{ fill: '#f6f3ed' }}
-                  formatter={value => `¥${Number(value).toFixed(2)}`}
-                  contentStyle={{
-                    border: '1px solid #ddd8cf',
-                    borderRadius: 12,
-                    fontSize: 11,
-                  }}
-                />
-                <Bar
-                  dataKey="expense"
-                  name="支出"
-                  fill="#d4a99e"
-                  radius={[5, 5, 2, 2]}
-                  maxBarSize={16}
-                />
-                <Bar
-                  dataKey="budget"
-                  name="本月定额"
-                  fill="#8fae8f"
-                  radius={[5, 5, 2, 2]}
-                  maxBarSize={16}
+                  width={40}
+                  domain={[0, chartMax]}
+                  ticks={chartTicks}
                 />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+          <div className="money-chart-scroll" ref={chartScrollRef}>
+            <div
+              className="money-chart"
+              style={{ width: `${Math.max(visibleChart.length * 72, 320)}px` }}
+            >
+              <ResponsiveContainer width="100%" height={210}>
+                <BarChart
+                  data={visibleChart}
+                  barGap={4}
+                  margin={{ top: 10, right: 4, left: -12, bottom: 0 }}
+                >
+                  <CartesianGrid stroke="#ece9e3" vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#85827d', fontSize: 10 }}
+                  />
+                  <YAxis
+                    hide
+                    width={0}
+                    domain={[0, chartMax]}
+                    ticks={chartTicks}
+                  />
+                  <Tooltip
+                    cursor={{ fill: '#f6f3ed' }}
+                    formatter={value => `¥${Number(value).toFixed(2)}`}
+                    contentStyle={{
+                      border: '1px solid #ddd8cf',
+                      borderRadius: 12,
+                      fontSize: 11,
+                    }}
+                  />
+                  <Bar
+                    dataKey="expense"
+                    name="支出"
+                    fill="#d4a99e"
+                    radius={[5, 5, 2, 2]}
+                    maxBarSize={16}
+                  />
+                  <Bar
+                    dataKey="budget"
+                    name="本月定额"
+                    fill="#8fae8f"
+                    radius={[5, 5, 2, 2]}
+                    maxBarSize={16}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
         <AnnualMoneyList

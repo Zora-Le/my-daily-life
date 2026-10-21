@@ -5916,3 +5916,26 @@ svg {
   border-radius: 4px;
   background: #d8d2c8;
 }
+
+/* frozen Y axis for the horizontally scrollable monthly chart */
+.money-chart-frame {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+}
+.money-chart-y-axis {
+  width: 42px;
+  padding-top: 8px;
+  background: #fff;
+  box-shadow: 3px 0 7px rgba(76, 70, 61, 0.05);
+  z-index: 2;
+}
+.money-chart-frame .money-chart-scroll {
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+}
