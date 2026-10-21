@@ -5865,10 +5865,10 @@ svg {
 .money-day {
   height: 66px;
 }
-.day-special-expense {
-  color: #cf7893;
+.money-day .day-special-expense {
+  color: #f472b6;
 }
-.day-reimbursement {
+.money-day .day-reimbursement {
   color: #79a9bd;
 }
 .expense-category button.active.special {
