@@ -5940,34 +5940,47 @@ svg {
   border-radius: 0;
 }
 
-/* mood monthly overview: keep the full calendar above navigation and scrollable */
+/* mood monthly overview: portal above the app shell, with a real mobile scroll area */
 .mood-modal-mask {
-  z-index: 80;
+  z-index: 120;
   align-items: flex-end;
-  overflow-y: auto;
-  padding-top: max(20px, env(safe-area-inset-top));
-  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  overflow: hidden;
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
   overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 .mood-month {
   box-sizing: border-box;
   max-height: calc(
     100dvh -
-    40px -
+    96px -
     env(safe-area-inset-top) -
     env(safe-area-inset-bottom)
   );
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.mood-month .modal-head {
+  flex: 0 0 auto;
+}
+.mood-calendar-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
   overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow-y: scroll;
+  padding-bottom: 12px;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
   scrollbar-width: thin;
   scrollbar-color: #d8d2c8 transparent;
   -webkit-overflow-scrolling: touch;
 }
-.mood-month::-webkit-scrollbar {
+.mood-calendar-scroll::-webkit-scrollbar {
   width: 4px;
 }
-.mood-month::-webkit-scrollbar-thumb {
+.mood-calendar-scroll::-webkit-scrollbar-thumb {
   border-radius: 4px;
   background: #d8d2c8;
 }

@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 const moods = [
   { name: '平静', tone: 'calm', mouth: '⌣' },
@@ -55,7 +56,8 @@ function MonthOverview({
   const month = base.getMonth();
   const total = new Date(year, month + 1, 0).getDate();
   const offset = (new Date(year, month, 1).getDay() + 6) % 7;
-  return (
+  if (typeof document === 'undefined') return null;
+  return createPortal(
     <div className="modal-mask mood-modal-mask" onPointerDown={onClose}>
       <div
         className="mood-month"
@@ -72,30 +74,37 @@ function MonthOverview({
             <X size={18} />
           </button>
         </div>
-        <div className="mood-weekdays">
-          {['一', '二', '三', '四', '五', '六', '日'].map(item => (
-            <span key={item}>{item}</span>
-          ))}
-        </div>
-        <div className="mood-calendar-grid">
-          {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-            .slice(0, offset)
-            .map(dayName => (
-              <i key={`blank-${dayName}`} />
+        <div className="mood-calendar-scroll">
+          <div className="mood-weekdays">
+            {['一', '二', '三', '四', '五', '六', '日'].map(item => (
+              <span key={item}>{item}</span>
             ))}
-          {Array.from({ length: total }, (_, index) => {
-            const iso = toIso(new Date(year, month, index + 1, 12));
-            const mood = days[iso]?.mood;
-            return (
-              <div key={iso}>
-                <small>{index + 1}</small>
-                {mood ? <Face mood={mood} /> : <span className="empty-face" />}
-              </div>
-            );
-          })}
+          </div>
+          <div className="mood-calendar-grid">
+            {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+              .slice(0, offset)
+              .map(dayName => (
+                <i key={`blank-${dayName}`} />
+              ))}
+            {Array.from({ length: total }, (_, index) => {
+              const iso = toIso(new Date(year, month, index + 1, 12));
+              const mood = days[iso]?.mood;
+              return (
+                <div key={iso}>
+                  <small>{index + 1}</small>
+                  {mood ? (
+                    <Face mood={mood} />
+                  ) : (
+                    <span className="empty-face" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
