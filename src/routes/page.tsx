@@ -1,4 +1,5 @@
 import { DailyPage } from '@/components/life/DailyPage';
+import { FirebaseAuthGate } from '@/components/life/FirebaseAuthGate';
 import { BookIcon } from '@/components/life/LineArt';
 import { MoneyPage } from '@/components/life/MoneyPage';
 import { ProgressPage } from '@/components/life/ProgressPage';
@@ -44,8 +45,8 @@ function Modal({
     </div>
   );
 }
-export default function Page() {
-  const { state, update, updateDay, importState } = useLifeStore();
+function AppContent({ uid }: { uid: string }) {
+  const { state, update, updateDay, importState } = useLifeStore(uid);
   const [page, setPage] = useState<PageKey>(() => {
     if (typeof window === 'undefined') return 'daily';
     const requested = new URLSearchParams(window.location.search).get('page');
@@ -456,5 +457,11 @@ export default function Page() {
       )}
       {toast && <div className="toast">{toast}</div>}
     </main>
+  );
+}
+
+export default function Page() {
+  return (
+    <FirebaseAuthGate>{user => <AppContent uid={user.uid} />}</FirebaseAuthGate>
   );
 }

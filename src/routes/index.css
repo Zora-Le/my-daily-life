@@ -5987,3 +5987,90 @@ svg {
 .mood-calendar-grid {
   padding-bottom: 8px;
 }
+
+/* Firebase sign-in gate */
+.firebase-login-page {
+  min-height: 100dvh;
+  padding: 24px;
+  display: grid;
+  place-items: center;
+  background: #efede8;
+}
+.firebase-login-card {
+  width: min(100%, 390px);
+  padding: 38px 30px 34px;
+  border: 1px solid #ddd8cf;
+  border-radius: 26px;
+  background: #fffefa;
+  box-shadow: 0 18px 50px rgba(63, 59, 50, 0.08);
+  text-align: center;
+}
+.firebase-login-mark {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #edf1ef;
+  color: #657c76;
+}
+.firebase-login-card > span {
+  color: #798d94;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.7px;
+}
+.firebase-login-card h1 {
+  margin: 12px 0 0;
+  color: #414642;
+  font-family: var(--serif);
+  font-size: 25px;
+  font-weight: 400;
+  line-height: 34px;
+}
+.firebase-login-card p {
+  margin: 12px auto 24px;
+  color: #888b85;
+  font-size: 11px;
+  line-height: 19px;
+}
+.firebase-login-card > button {
+  width: 100%;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid #d7d4cc;
+  border-radius: 13px;
+  background: #fff;
+  color: #4f5450;
+  font-size: 12px;
+  font-weight: 500;
+}
+.firebase-login-card > button:disabled {
+  opacity: 0.62;
+}
+.firebase-login-card > button svg {
+  width: 18px;
+  height: 18px;
+}
+.firebase-login-card > small {
+  display: block;
+  margin-top: 12px;
+  color: #b85f5a;
+  font-size: 9px;
+  line-height: 15px;
+}
+.firebase-login-spinner {
+  width: 22px;
+  height: 22px;
+  color: #758982;
+  animation: firebase-spin .8s linear infinite;
+}
+@keyframes firebase-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
