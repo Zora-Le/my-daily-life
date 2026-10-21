@@ -5890,3 +5890,29 @@ svg {
 .bar-legend i.budget {
   background: #8fae8f;
 }
+
+/* horizontally scrollable monthly expense chart */
+.money-chart-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  scrollbar-width: thin;
+  scrollbar-color: #d8d2c8 transparent;
+  -webkit-overflow-scrolling: touch;
+}
+.money-chart-scroll .money-chart {
+  min-width: 320px;
+  padding-top: 8px;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+.money-chart-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.money-chart-scroll::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: #d8d2c8;
+}

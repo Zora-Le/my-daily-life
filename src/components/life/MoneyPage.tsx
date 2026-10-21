@@ -6,15 +6,15 @@ import type {
   PendingExpense,
 } from '@/hooks/useLifeStore';
 import {
+  allRecordedMonthlySummary,
   annualExpenseSummary,
   createSavingsIsland,
   deleteSavingsIsland,
-  mergeMonthlyMoneySummary,
   renameSavingsIsland,
 } from '@/lib/lifeRules';
 import { safeCalculate } from '@/lib/lifeUtils';
 import { Plus } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -97,15 +97,25 @@ export function MoneyPage({
     setEditingName(id);
   };
   const total = savings.reduce((sum, item) => sum + item.value, 0);
-  const visibleChart = mergeMonthlyMoneySummary(
+  const chartScrollRef = useRef<HTMLDivElement | null>(null);
+  const visibleChart = allRecordedMonthlySummary(
     transactions,
     monthlyMoney,
-    new Date(),
   ).map(item => ({
-    label: `${Number(item.month.slice(5))}月`,
+    label:
+      item.month.slice(0, 4) === String(new Date().getFullYear())
+        ? `${Number(item.month.slice(5))}月`
+        : `${item.month.slice(2, 4)}/${Number(item.month.slice(5))}`,
     expense: item.expense / 100,
     budget: item.budget / 100,
   }));
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const element = chartScrollRef.current;
+      if (element) element.scrollLeft = element.scrollWidth;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [visibleChart.length]);
   const availableYears = Array.from(
     new Set([
       new Date().getFullYear(),
@@ -227,50 +237,55 @@ export function MoneyPage({
             定额
           </span>
         </div>
-        <div className="money-chart">
-          <ResponsiveContainer width="100%" height={210}>
-            <BarChart
-              data={visibleChart}
-              barGap={4}
-              margin={{ top: 10, right: 4, left: -12, bottom: 0 }}
-            >
-              <CartesianGrid stroke="#ece9e3" vertical={false} />
-              <XAxis
-                dataKey="label"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: '#85827d', fontSize: 10 }}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: '#aaa59d', fontSize: 9 }}
-              />
-              <Tooltip
-                cursor={{ fill: '#f6f3ed' }}
-                formatter={value => `¥${Number(value).toFixed(2)}`}
-                contentStyle={{
-                  border: '1px solid #ddd8cf',
-                  borderRadius: 12,
-                  fontSize: 11,
-                }}
-              />
-              <Bar
-                dataKey="expense"
-                name="支出"
-                fill="#d4a99e"
-                radius={[5, 5, 2, 2]}
-                maxBarSize={16}
-              />
-              <Bar
-                dataKey="budget"
-                name="本月定额"
-                fill="#8fae8f"
-                radius={[5, 5, 2, 2]}
-                maxBarSize={16}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="money-chart-scroll" ref={chartScrollRef}>
+          <div
+            className="money-chart"
+            style={{ width: `${Math.max(visibleChart.length * 72, 320)}px` }}
+          >
+            <ResponsiveContainer width="100%" height={210}>
+              <BarChart
+                data={visibleChart}
+                barGap={4}
+                margin={{ top: 10, right: 4, left: -12, bottom: 0 }}
+              >
+                <CartesianGrid stroke="#ece9e3" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#85827d', fontSize: 10 }}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#aaa59d', fontSize: 9 }}
+                />
+                <Tooltip
+                  cursor={{ fill: '#f6f3ed' }}
+                  formatter={value => `¥${Number(value).toFixed(2)}`}
+                  contentStyle={{
+                    border: '1px solid #ddd8cf',
+                    borderRadius: 12,
+                    fontSize: 11,
+                  }}
+                />
+                <Bar
+                  dataKey="expense"
+                  name="支出"
+                  fill="#d4a99e"
+                  radius={[5, 5, 2, 2]}
+                  maxBarSize={16}
+                />
+                <Bar
+                  dataKey="budget"
+                  name="本月定额"
+                  fill="#8fae8f"
+                  radius={[5, 5, 2, 2]}
+                  maxBarSize={16}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
         <AnnualMoneyList
           title="大额支出"

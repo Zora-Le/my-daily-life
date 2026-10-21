@@ -86,6 +86,44 @@ export function monthlyTransactionSummary(
  * 合并图表月度汇总。monthlyMoney 沿用历史存储语义：income/expense 为元；
  * 返回值与 monthlyTransactionSummary 一致，income/expense 均为分。
  */
+export function allRecordedMonthlySummary(
+  transactions: MoneyTransaction[],
+  manual: MonthlyMoney[],
+) {
+  const months = new Set<string>();
+  for (const item of transactions) {
+    if (item.kind === 'expense' && item.expenseType !== 'reimbursement') {
+      months.add(item.date.slice(0, 7));
+    }
+  }
+  for (const item of manual) {
+    if (Number(item.expense || 0) > 0 || Number(item.budget || 0) > 0) {
+      months.add(item.month);
+    }
+  }
+
+  return [...months].sort().map(month => {
+    const monthTransactions = transactions.filter(
+      item =>
+        item.date.startsWith(`${month}-`) &&
+        item.kind === 'expense' &&
+        item.expenseType !== 'reimbursement',
+    );
+    const saved = manual.find(item => item.month === month);
+    const expense = monthTransactions.length
+      ? monthTransactions.reduce(
+          (total, item) => total + transactionCents(item),
+          0,
+        )
+      : Math.round(Number(saved?.expense || 0) * 100);
+    return {
+      month,
+      expense,
+      budget: Math.round(Number(saved?.budget || 0) * 100),
+    };
+  });
+}
+
 export function entryMonthKey(entry: AnnualMoneyEntry): string | null {
   const value = entry.month.trim();
   const match = value.match(/^(?:\d{4}[-/.年])?(\d{1,2})\s*月?$/);
