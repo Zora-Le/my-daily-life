@@ -1,11 +1,12 @@
 import type { MoneyTransaction } from '@/hooks/useLifeStore';
+import { useLongPress } from '@/hooks/useLongPress';
 import {
   calendarCells,
   createMoneyTransaction,
   formatCents,
   summarizeTransactions,
 } from '@/lib/lifeRules';
-import { Check, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Trash2, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { ConfirmModal } from './ConfirmModal';
 
@@ -33,6 +34,13 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
   const [amount, setAmount] = useState('');
   const [detail, setDetail] = useState('');
   const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
+  const [editingTransaction, setEditingTransaction] =
+    useState<MoneyTransaction | null>(null);
+  const [editAmount, setEditAmount] = useState('');
+  const bindLongPress = useLongPress((item: MoneyTransaction) => {
+    setEditingTransaction(item);
+    setEditAmount(formatCents(item.amountCents));
+  });
   const byDay = useMemo(() => {
     const map = new Map<string, MoneyTransaction[]>();
     for (const item of transactions)
@@ -52,6 +60,28 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
     if (pendingRemoval === null) return;
     onChange(transactions.filter(item => item.id !== pendingRemoval));
     setPendingRemoval(null);
+  };
+  const saveAmount = () => {
+    if (!editingTransaction) return;
+    try {
+      const updated = createMoneyTransaction(
+        editingTransaction.date,
+        editingTransaction.kind,
+        editAmount,
+        editingTransaction.detail,
+      );
+      onChange(
+        transactions.map(item =>
+          item.id === editingTransaction.id
+            ? { ...item, amountCents: updated.amountCents }
+            : item,
+        ),
+      );
+      setEditingTransaction(null);
+      notify('金额已更新');
+    } catch (error) {
+      notify((error as Error).message);
+    }
   };
   const submit = () => {
     try {
@@ -143,6 +173,7 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
                     : ''
               }`}
               key={item.id}
+              {...bindLongPress(item)}
             >
               <i className={item.kind} />
               <span>
@@ -224,6 +255,45 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
           <small>新增记录将保存到 {selected}</small>
         </div>
       </div>
+      {editingTransaction && (
+        <div
+          className="modal-mask"
+          onPointerDown={() => setEditingTransaction(null)}
+        >
+          <section
+            className="modal-sheet money-edit-modal"
+            onPointerDown={event => event.stopPropagation()}
+          >
+            <div className="modal-head">
+              <div>
+                <span>EDIT AMOUNT</span>
+                <h2>编辑收支金额</h2>
+              </div>
+              <button
+                onClick={() => setEditingTransaction(null)}
+                aria-label="关闭编辑"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <p className="money-edit-detail">{editingTransaction.detail}</p>
+            <label>
+              金额
+              <input
+                inputMode="decimal"
+                value={editAmount}
+                onChange={event =>
+                  setEditAmount(event.target.value.replace(/[^\d.]/g, ''))
+                }
+                onKeyDown={event => event.key === 'Enter' && saveAmount()}
+              />
+            </label>
+            <button className="primary-action" onClick={saveAmount}>
+              保存修改
+            </button>
+          </section>
+        </div>
+      )}
       <ConfirmModal
         open={pendingRemoval !== null}
         title="删除记账明细"

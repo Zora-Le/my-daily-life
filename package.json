@@ -1,20 +1,15 @@
 {
-  "name": "my-daily-my-life-ui",
+  "name": "my-daily-life",
   "private": true,
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "reset": "npx rimraf ./**/node_modules",
-    "setup": "pnpm run reset && pnpm install",
-    "dev": "edenx dev",
-    "build": "edenx build",
-    "build:github-pages": "GITHUB_PAGES_BASE_PATH=/my-daily-life/ pnpm run build",
-    "postbuild": "node scripts/preparePwaDist.mjs",
-    "start": "edenx start",
-    "serve": "edenx serve",
-    "new": "edenx new",
+    "dev": "vite",
+    "build": "vite build",
+    "build:github-pages": "vite build --base=/my-daily-life/",
+    "preview": "vite preview",
     "lint": "biome check",
-    "prepare": "simple-git-hooks",
-    "upgrade": "edenx upgrade"
+    "prepare": "simple-git-hooks"
   },
   "engines": {
     "node": ">=20"
@@ -28,9 +23,6 @@
     "pre-commit": "npx lint-staged"
   },
   "dependencies": {
-    "@arco-design/iconbox-react-rdsvc": "0.0.371",
-    "@bytecloud/common-lib": "^7.52.0",
-    "@edenx/runtime": "3.7.0",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.4",
@@ -82,18 +74,17 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@edenx/app-tools": "3.7.0",
-    "@edenx/tsconfig": "3.7.0",
-    "@rdservices/aime-code-inspector": "1.0.23",
     "@types/node": "^20",
     "@types/react": "~19.2.7",
     "@types/react-dom": "~19.2.3",
+    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "lint-staged": "~13.1.0",
     "postcss": "^8.4.49",
     "rimraf": "~3.0.2",
     "simple-git-hooks": "^2.11.1",
     "tailwindcss": "^3.4.16",
-    "typescript": "~5.7.3"
+    "typescript": "~5.7.3",
+    "vite": "^6.1.0"
   }
 }

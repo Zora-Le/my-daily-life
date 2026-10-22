@@ -1,6 +1,10 @@
 allowBuilds:
   "@biomejs/biome": true
+  "@firebase/util": true
+  "@parcel/watcher": true
   "@swc/core": true
   core-js: true
   crc64-ecma182.js: true
+  esbuild: true
+  protobufjs: true
   simple-git-hooks: true

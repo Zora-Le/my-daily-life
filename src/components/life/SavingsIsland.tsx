@@ -1,5 +1,5 @@
 import type { SavingsIsland as SavingsIslandData } from '@/hooks/lifeSchema';
-import { Trash2 } from 'lucide-react';
+import { useLongPress } from '@/hooks/useLongPress';
 import { useEffect, useRef, useState } from 'react';
 import { ConfirmModal } from './ConfirmModal';
 
@@ -25,9 +25,11 @@ export function SavingsIsland({
   const [nameDraft, setNameDraft] = useState(item.displayName);
   const [editingAmount, setEditingAmount] = useState(false);
   const [amountDraft, setAmountDraft] = useState(item.expression);
+  const [actionMenuOpen, setActionMenuOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const nameInput = useRef<HTMLInputElement>(null);
   const amountInput = useRef<HTMLInputElement>(null);
+  const bindLongPress = useLongPress(() => setActionMenuOpen(true));
 
   useEffect(() => {
     if (editingName) nameInput.current?.focus();
@@ -35,6 +37,7 @@ export function SavingsIsland({
   useEffect(() => {
     if (editingAmount) amountInput.current?.focus();
   }, [editingAmount]);
+
   const confirmDelete = () => {
     onDelete();
     setConfirmingDelete(false);
@@ -48,9 +51,19 @@ export function SavingsIsland({
   const saveAmount = () => {
     if (onAmount(amountDraft)) setEditingAmount(false);
   };
+  const startEditing = () => {
+    setActionMenuOpen(false);
+    setNameDraft(item.displayName);
+    setAmountDraft(item.expression);
+    onEditingName(true);
+    setEditingAmount(true);
+  };
 
   return (
-    <article className={`paper-island ${editMode ? 'is-editing' : ''}`}>
+    <article
+      className={`paper-island ${editMode ? 'is-editing' : ''}`}
+      {...bindLongPress(item.id)}
+    >
       <div className="island-name">
         {editingName ? (
           <input
@@ -115,19 +128,22 @@ export function SavingsIsland({
         </button>
       )}
       {item.detail && <span>{item.detail}</span>}
-      {editMode && (
-        <button
-          type="button"
-          className="island-delete"
-          aria-label={`删除${item.displayName}`}
-          title="删除岛屿"
-          onClick={event => {
-            event.stopPropagation();
-            setConfirmingDelete(true);
-          }}
-        >
-          <Trash2 size={12} />
-        </button>
+      {actionMenuOpen && (
+        <div className="island-action-menu" role="menu">
+          <button type="button" onClick={startEditing}>
+            编辑
+          </button>
+          <button
+            type="button"
+            className="danger"
+            onClick={() => {
+              setActionMenuOpen(false);
+              setConfirmingDelete(true);
+            }}
+          >
+            删除
+          </button>
+        </div>
       )}
       <ConfirmModal
         open={confirmingDelete}

@@ -1,7 +1,9 @@
 import type { AnnualMoneyEntry } from '@/hooks/useLifeStore';
+import { useLongPress } from '@/hooks/useLongPress';
 import { formatCents, parseMoneyToCents } from '@/lib/lifeRules';
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { ConfirmModal } from './ConfirmModal';
 
 interface Props {
   title: string;
@@ -12,6 +14,10 @@ interface Props {
   notify: (text: string) => void;
   compact?: boolean;
 }
+
+type EditDraft = Pick<AnnualMoneyEntry, 'id' | 'month' | 'name'> & {
+  amount: string;
+};
 
 export function AnnualMoneyList({
   title,
@@ -26,11 +32,21 @@ export function AnnualMoneyList({
   const [month, setMonth] = useState('');
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
+  const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
   const visible = useMemo(
     () => items.filter(item => item.year === year),
     [items, year],
   );
   const total = visible.reduce((sum, item) => sum + item.amountCents, 0);
+  const bindLongPress = useLongPress((item: AnnualMoneyEntry) => {
+    setEditDraft({
+      id: item.id,
+      month: item.month,
+      name: item.name,
+      amount: formatCents(item.amountCents),
+    });
+  });
 
   const add = () => {
     try {
@@ -50,6 +66,39 @@ export function AnnualMoneyList({
       setMonth('');
       setName('');
       setAmount('');
+    } catch (error) {
+      notify((error as Error).message);
+    }
+  };
+
+  const remove = () => {
+    if (pendingRemoval === null) return;
+    onChange(items.filter(entry => entry.id !== pendingRemoval));
+    setPendingRemoval(null);
+  };
+
+  const saveEdit = () => {
+    if (!editDraft) return;
+    try {
+      if (tone === 'large' && !editDraft.month.trim())
+        throw new Error('请填写月份');
+      if (tone === 'large' && !editDraft.name.trim())
+        throw new Error('请填写项目名称');
+      const amountCents = parseMoneyToCents(editDraft.amount);
+      onChange(
+        items.map(item =>
+          item.id === editDraft.id
+            ? {
+                ...item,
+                month: tone === 'large' ? editDraft.month.trim() : item.month,
+                name: tone === 'large' ? editDraft.name.trim() : item.name,
+                amountCents,
+              }
+            : item,
+        ),
+      );
+      setEditDraft(null);
+      notify('记录已更新');
     } catch (error) {
       notify((error as Error).message);
     }
@@ -114,14 +163,12 @@ export function AnnualMoneyList({
       </div>
       <div className="annual-entry-rows">
         {visible.map(item => (
-          <div key={item.id}>
+          <div key={item.id} {...bindLongPress(item)}>
             <span>{item.month}</span>
             <b>{item.name}</b>
             <strong>¥{formatCents(item.amountCents)}</strong>
             <button
-              onClick={() =>
-                onChange(items.filter(entry => entry.id !== item.id))
-              }
+              onClick={() => setPendingRemoval(item.id)}
               aria-label={`删除${item.name}`}
             >
               <Trash2 size={12} />
@@ -135,6 +182,71 @@ export function AnnualMoneyList({
           年度收入合计 <strong>¥{formatCents(total)}</strong>
         </p>
       )}
+      {editDraft && (
+        <div className="modal-mask" onPointerDown={() => setEditDraft(null)}>
+          <section
+            className="modal-sheet money-edit-modal"
+            onPointerDown={event => event.stopPropagation()}
+          >
+            <div className="modal-head">
+              <div>
+                <span>EDIT RECORD</span>
+                <h2>{tone === 'large' ? '编辑大额支出' : '编辑收入金额'}</h2>
+              </div>
+              <button onClick={() => setEditDraft(null)} aria-label="关闭编辑">
+                <X size={18} />
+              </button>
+            </div>
+            {tone === 'large' && (
+              <>
+                <label>
+                  月份
+                  <input
+                    value={editDraft.month}
+                    onChange={event =>
+                      setEditDraft({ ...editDraft, month: event.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  项目名称
+                  <input
+                    value={editDraft.name}
+                    onChange={event =>
+                      setEditDraft({ ...editDraft, name: event.target.value })
+                    }
+                  />
+                </label>
+              </>
+            )}
+            <label>
+              金额
+              <input
+                inputMode="decimal"
+                value={editDraft.amount}
+                onChange={event =>
+                  setEditDraft({
+                    ...editDraft,
+                    amount: event.target.value.replace(/[^\d.]/g, ''),
+                  })
+                }
+                onKeyDown={event => event.key === 'Enter' && saveEdit()}
+              />
+            </label>
+            <button className="primary-action" onClick={saveEdit}>
+              保存修改
+            </button>
+          </section>
+        </div>
+      )}
+      <ConfirmModal
+        open={pendingRemoval !== null}
+        title={`删除${tone === 'income' ? '收入' : '大额支出'}记录`}
+        message="确认删除？删除后无法恢复。"
+        confirmLabel="删除"
+        onCancel={() => setPendingRemoval(null)}
+        onConfirm={remove}
+      />
     </section>
   );
 }

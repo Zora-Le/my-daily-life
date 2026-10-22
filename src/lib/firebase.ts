@@ -12,12 +12,12 @@ import {
 } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyAfGA1fVchFqgnu32bCiEAQqKM9YFxfGig',
-  authDomain: 'my-daily-life-e6e18.firebaseapp.com',
-  projectId: 'my-daily-life-e6e18',
-  storageBucket: 'my-daily-life-e6e18.firebasestorage.app',
-  messagingSenderId: '35449098973',
-  appId: '1:35449098973:web:e2fb71c0e653180ac04134',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 export const firebaseApp = getApps().length

@@ -1,5 +1,6 @@
 import { AlertTriangle } from 'lucide-react';
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Props {
   open: boolean;
@@ -29,7 +30,7 @@ export function ConfirmModal({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div className="confirm-modal-mask" onPointerDown={onCancel}>
       <section
         className="confirm-modal"
@@ -48,11 +49,12 @@ export function ConfirmModal({
           <button type="button" onClick={onCancel}>
             取消
           </button>
-          <button type="button" className="danger" onClick={onConfirm} autoFocus>
+          <button type="button" className="danger" onClick={onConfirm}>
             {confirmLabel}
           </button>
         </div>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }
