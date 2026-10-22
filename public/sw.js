@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'my-daily-v3';
+const CACHE_VERSION = 'my-daily-v4';
 const PRECACHE_NAME = `${CACHE_VERSION}-precache`;
 const RUNTIME_NAME = `${CACHE_VERSION}-runtime`;
 const BASE_PATH = new URL(self.registration.scope).pathname;
@@ -6,8 +6,9 @@ const appPath = path => `${BASE_PATH}${path.replace(/^\//, '')}`;
 const PRECACHE_URLS = [
   appPath(''),
   appPath('manifest.json'),
-  appPath('icons/pwa-cat-192.png'),
-  appPath('icons/pwa-cat-512.png'),
+  appPath('icons/pwa-cat-v2-192.png'),
+  appPath('icons/pwa-cat-v2-512.png'),
+  appPath('icons/apple-touch-icon-v2-180.png'),
 ];
 
 const isCacheableResponse = response =>
