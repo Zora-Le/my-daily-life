@@ -13,7 +13,7 @@ import {
   renameSavingsIsland,
 } from '@/lib/lifeRules';
 import { safeCalculate } from '@/lib/lifeUtils';
-import { Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import {
   Bar,
@@ -67,8 +67,6 @@ export function MoneyPage({
   const [summaryYear, setSummaryYear] = useState(() =>
     new Date().getFullYear(),
   );
-  const [choosingYear, setChoosingYear] = useState(false);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const commitSaving = (item: Saving, expression: string) => {
     try {
       const value = safeCalculate(expression);
@@ -121,26 +119,12 @@ export function MoneyPage({
     });
     return () => cancelAnimationFrame(frame);
   }, [visibleChart.length]);
-  const availableYears = Array.from(
-    new Set([
-      new Date().getFullYear(),
-      ...transactions.map(item => Number(item.date.slice(0, 4))),
-      ...monthlyMoney.map(item => Number(item.month.slice(0, 4))),
-      ...largeExpenseEntries.map(item => item.year),
-    ]),
-  )
-    .filter(Number.isFinite)
-    .sort((a, b) => b - a);
   const annualExpense = annualExpenseSummary(
     transactions,
     monthlyMoney,
     summaryYear,
     largeExpenseEntries,
   );
-  const cancelLongPress = () => {
-    if (longPressTimer.current) clearTimeout(longPressTimer.current);
-    longPressTimer.current = null;
-  };
   return (
     <>
       <div className="money-card-stack" aria-label="收支概览卡片">
@@ -323,24 +307,23 @@ export function MoneyPage({
           notify={notify}
         />
         <div className="annual-expense-strip">
-          <button
-            type="button"
-            className="annual-year"
-            aria-label="长按切换年度汇总年份"
-            onPointerDown={() => {
-              cancelLongPress();
-              longPressTimer.current = setTimeout(() => {
-                setChoosingYear(true);
-                longPressTimer.current = null;
-              }, 550);
-            }}
-            onPointerUp={cancelLongPress}
-            onPointerLeave={cancelLongPress}
-            onPointerCancel={cancelLongPress}
-            onContextMenu={event => event.preventDefault()}
-          >
-            {summaryYear}年
-          </button>
+          <div className="annual-year-switcher" aria-label="年度支出年份">
+            <button
+              type="button"
+              onClick={() => setSummaryYear(year => year - 1)}
+              aria-label="上一年"
+            >
+              <ChevronLeft size={13} />
+            </button>
+            <b>{summaryYear}年</b>
+            <button
+              type="button"
+              onClick={() => setSummaryYear(year => year + 1)}
+              aria-label="下一年"
+            >
+              <ChevronRight size={13} />
+            </button>
+          </div>
           <span>年度支出</span>
           <strong>
             ¥
@@ -349,23 +332,6 @@ export function MoneyPage({
               maximumFractionDigits: 2,
             })}
           </strong>
-          {choosingYear && (
-            <div className="annual-year-picker">
-              {availableYears.map(year => (
-                <button
-                  type="button"
-                  className={year === summaryYear ? 'active' : ''}
-                  key={year}
-                  onClick={() => {
-                    setSummaryYear(year);
-                    setChoosingYear(false);
-                  }}
-                >
-                  {year}年
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </section>
 

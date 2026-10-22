@@ -5567,50 +5567,42 @@ svg {
   color: #8e8b84;
   font-size: 8px;
 }
-.annual-year {
-  padding: 3px 7px;
-  border: 0;
+.annual-year-switcher {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 3px;
   border-radius: 8px;
   background: #eee9df;
   color: #786f65;
   font-family: var(--serif);
+  white-space: nowrap;
+}
+.annual-year-switcher button {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+}
+.annual-year-switcher button:active {
+  background: #e2dbcf;
+}
+.annual-year-switcher b {
+  min-width: 40px;
   font-size: 11px;
-  touch-action: manipulation;
-  user-select: none;
+  font-weight: 400;
+  text-align: center;
 }
 .annual-expense-strip strong {
   color: #9a6252;
   font-family: var(--serif);
   font-size: 13px;
   font-weight: 400;
-}
-.annual-year-picker {
-  position: absolute;
-  left: 8px;
-  bottom: calc(100% + 5px);
-  z-index: 8;
-  max-width: calc(100% - 16px);
-  padding: 5px;
-  display: flex;
-  gap: 4px;
-  overflow-x: auto;
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  background: #fffdf9;
-  box-shadow: 0 7px 18px rgba(78, 65, 53, 0.12);
-}
-.annual-year-picker button {
-  flex: 0 0 auto;
-  padding: 5px 8px;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: #858079;
-  font-size: 9px;
-}
-.annual-year-picker button.active {
-  background: #eee9df;
-  color: #8f5f3b;
 }
 
 /* money page stacked swipe cards and annual entry lists */
