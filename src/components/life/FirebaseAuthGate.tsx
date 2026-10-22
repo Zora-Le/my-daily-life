@@ -1,16 +1,26 @@
 import { firebaseAuth, googleProvider } from '@/lib/firebase';
-import { type User, onAuthStateChanged, signInWithPopup } from 'firebase/auth';
+import {
+  type User,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from 'firebase/auth';
 import { Cloud, LoaderCircle } from 'lucide-react';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
 
 interface Props {
   children: (user: User) => ReactNode;
 }
 
+type AuthAction = 'login' | 'register' | 'google' | null;
+
 export function FirebaseAuthGate({ children }: Props) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [signingIn, setSigningIn] = useState(false);
+  const [action, setAction] = useState<AuthAction>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   useEffect(
@@ -22,22 +32,40 @@ export function FirebaseAuthGate({ children }: Props) {
     [],
   );
 
-  const login = async () => {
-    setSigningIn(true);
+  const runEmailAuth = async (nextAction: 'login' | 'register') => {
+    setAction(nextAction);
+    setError('');
+    try {
+      if (nextAction === 'register') {
+        await createUserWithEmailAndPassword(
+          firebaseAuth,
+          email.trim(),
+          password,
+        );
+      } else {
+        await signInWithEmailAndPassword(firebaseAuth, email.trim(), password);
+      }
+    } catch (reason) {
+      setError(getAuthError(reason, nextAction));
+    } finally {
+      setAction(null);
+    }
+  };
+
+  const submitLogin = (event: FormEvent) => {
+    event.preventDefault();
+    void runEmailAuth('login');
+  };
+
+  const loginWithGoogle = async () => {
+    setAction('google');
     setError('');
     try {
       await signInWithPopup(firebaseAuth, googleProvider);
     } catch (reason) {
-      const code = (reason as { code?: string }).code;
-      setError(
-        code === 'auth/popup-closed-by-user'
-          ? '登录窗口已关闭，请重新尝试'
-          : code === 'auth/unauthorized-domain'
-            ? '当前网站域名尚未加入 Firebase 授权域名'
-            : 'Google 登录失败，请检查网络后重试',
-      );
+      setError(getAuthError(reason, 'google'));
     } finally {
-      setSigningIn(false);
+      setAction(null);
     }
   };
 
@@ -50,6 +78,8 @@ export function FirebaseAuthGate({ children }: Props) {
   }
   if (user) return <>{children(user)}</>;
 
+  const busy = action !== null;
+
   return (
     <main className="firebase-login-page">
       <section className="firebase-login-card">
@@ -58,18 +88,95 @@ export function FirebaseAuthGate({ children }: Props) {
         </div>
         <span>MY DAILY · MY LIFE</span>
         <h1>记录生活，也把它安心保存</h1>
-        <p>使用 Google 账号登录，在不同设备间同步你的日常记录。</p>
-        <button type="button" onClick={login} disabled={signingIn}>
-          {signingIn ? (
-            <LoaderCircle className="firebase-login-spinner" />
+        <p>使用邮箱登录，在不同设备间同步你的日常记录。</p>
+
+        <form className="firebase-email-form" onSubmit={submitLogin}>
+          <label>
+            <span>邮箱</span>
+            <input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={event => setEmail(event.target.value)}
+              required
+            />
+          </label>
+          <label>
+            <span>密码</span>
+            <input
+              type="password"
+              autoComplete="current-password"
+              placeholder="至少 6 位密码"
+              minLength={6}
+              value={password}
+              onChange={event => setPassword(event.target.value)}
+              required
+            />
+          </label>
+          <div className="firebase-email-actions">
+            <button type="submit" disabled={busy}>
+              {action === 'login' && (
+                <LoaderCircle className="firebase-button-spinner" />
+              )}
+              登录
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              disabled={busy}
+              onClick={() => void runEmailAuth('register')}
+            >
+              {action === 'register' && (
+                <LoaderCircle className="firebase-button-spinner" />
+              )}
+              注册
+            </button>
+          </div>
+        </form>
+
+        <div className="firebase-login-divider">
+          <span>或</span>
+        </div>
+        <button
+          type="button"
+          className="firebase-google-button"
+          onClick={() => void loginWithGoogle()}
+          disabled={busy}
+        >
+          {action === 'google' ? (
+            <LoaderCircle className="firebase-button-spinner" />
           ) : (
             <GoogleMark />
           )}
-          {signingIn ? '正在登录…' : '用 Google 登录'}
+          用 Google 登录
         </button>
         {error && <small>{error}</small>}
       </section>
     </main>
+  );
+}
+
+function getAuthError(reason: unknown, action: AuthAction) {
+  const code = (reason as { code?: string }).code;
+  const messages: Record<string, string> = {
+    'auth/email-already-in-use': '这个邮箱已经注册，请直接登录',
+    'auth/invalid-credential': '邮箱或密码不正确',
+    'auth/invalid-email': '请输入有效的邮箱地址',
+    'auth/missing-password': '请输入密码',
+    'auth/weak-password': '密码强度不足，请设置至少 6 位密码',
+    'auth/too-many-requests': '尝试次数过多，请稍后再试',
+    'auth/network-request-failed': '网络连接失败，请检查网络后重试',
+    'auth/operation-not-allowed': 'Firebase 尚未开启邮箱/密码登录方式',
+    'auth/popup-closed-by-user': '登录窗口已关闭，请重新尝试',
+    'auth/unauthorized-domain': '当前网站域名尚未加入 Firebase 授权域名',
+  };
+  return (
+    messages[code ?? ''] ??
+    (action === 'google'
+      ? 'Google 登录失败，请检查网络后重试'
+      : '操作失败，请稍后重试')
   );
 }
 
