@@ -1,10 +1,6 @@
 import type { RewardCard } from '@/hooks/useLifeStore';
 import { compressImage } from '@/lib/lifeUtils';
 import {
-  deleteImageFromStorage,
-  uploadImageToStorage,
-} from '@/lib/uploadImage';
-import {
   ImagePlus,
   LockKeyhole,
   Paintbrush,
@@ -21,7 +17,6 @@ type Kind = RewardCard['kind'];
 type Draft = { kind: Kind; title: string; copy: string; image?: string };
 
 interface Props {
-  uid: string;
   unlocked: boolean;
   cards: RewardCard[];
   history: { cardId: string; drawnAt: string }[];
@@ -100,7 +95,6 @@ function CardFace({ card }: { card: RewardCard }) {
 }
 
 export function RewardsPage({
-  uid,
   unlocked,
   cards,
   history,
@@ -153,27 +147,10 @@ export function RewardsPage({
     setPending(null);
     notify('卡片已永久保留');
   };
-  const closeAdd = (removeDraftImage = true) => {
-    if (removeDraftImage && draft.image) {
-      void deleteImageFromStorage(draft.image).catch(() =>
-        notify('未保存的云端图片清理失败，请稍后重试'),
-      );
-    }
+  const closeAdd = () => {
     setAdding(false);
     setDrawingDraft(false);
     setDraft({ kind: 'sweet', title: '', copy: '' });
-  };
-  const saveDraftImage = async (dataUrl: string) => {
-    const previousImage = draft.image;
-    const image = await uploadImageToStorage(uid, dataUrl);
-    setDraft(current => ({ ...current, image }));
-    if (previousImage) {
-      try {
-        await deleteImageFromStorage(previousImage);
-      } catch {
-        notify('旧卡面清理失败，新卡面已正常保存');
-      }
-    }
   };
   const saveDraft = () => {
     const nextTitle = draft.title.trim();
@@ -192,7 +169,7 @@ export function RewardsPage({
       return notify('本地存储空间可能不足，请换用更小图片或先导出备份');
     }
     onCards([...cards, nextCard]);
-    closeAdd(false);
+    closeAdd();
     notify(`已加入 ${kindLabel(nextCard.kind)} 卡池`);
   };
   return (
@@ -216,7 +193,7 @@ export function RewardsPage({
         onEdit={setEditing}
         onReturn={card => {
           onReturnCard(card.id);
-          notify(`"${card.title}"已退回 ${kindLabel(card.kind)} 卡池`);
+          notify(`“${card.title}”已退回 ${kindLabel(card.kind)} 卡池`);
         }}
         onDelete={setDeleteTarget}
       />
@@ -304,7 +281,7 @@ export function RewardsPage({
       )}
 
       {adding && (
-        <div className="modal-mask" onPointerDown={() => closeAdd()}>
+        <div className="modal-mask" onPointerDown={closeAdd}>
           <dialog
             open
             className="modal-sheet reward-create-sheet"
@@ -315,21 +292,17 @@ export function RewardsPage({
                 <span>NEW CARD</span>
                 <h2>添加一张奖励卡</h2>
               </div>
-              <button onClick={() => closeAdd()} aria-label="关闭">
+              <button onClick={closeAdd} aria-label="关闭">
                 <X />
               </button>
             </div>
             {drawingDraft ? (
               <DrawingEditor
                 notify={notify}
-                onSave={async dataUrl => {
-                  try {
-                    await saveDraftImage(dataUrl);
-                    setDrawingDraft(false);
-                    notify('手绘卡面已上传');
-                  } catch (error) {
-                    notify((error as Error).message);
-                  }
+                onSave={image => {
+                  setDraft(current => ({ ...current, image }));
+                  setDrawingDraft(false);
+                  notify('手绘卡面已暂存');
                 }}
               />
             ) : (
@@ -384,13 +357,9 @@ export function RewardsPage({
                           const file = event.target.files?.[0];
                           if (!file) return;
                           try {
-                            const dataUrl = await compressImage(
-                              file,
-                              900,
-                              0.72,
-                            );
-                            await saveDraftImage(dataUrl);
-                            notify('图片已上传');
+                            const image = await compressImage(file, 900, 0.72);
+                            setDraft(current => ({ ...current, image }));
+                            notify('图片已压缩并载入');
                           } catch (error) {
                             notify((error as Error).message);
                           }
@@ -403,7 +372,7 @@ export function RewardsPage({
                     </button>
                     <small>
                       支持手机相册图片；仅限图片且原文件不超过
-                      12MB。保存前会自动压缩并上传云端。
+                      12MB。保存前会自动压缩，本地空间不足时会提示。
                     </small>
                   </div>
                 </div>
@@ -430,26 +399,14 @@ export function RewardsPage({
             </div>
             <DrawingEditor
               notify={notify}
-              onSave={async dataUrl => {
-                try {
-                  const image = await uploadImageToStorage(uid, dataUrl);
-                  onCards(
-                    cards.map(card =>
-                      card.id === editing.id ? { ...card, image } : card,
-                    ),
-                  );
-                  if (editing.image) {
-                    try {
-                      await deleteImageFromStorage(editing.image);
-                    } catch {
-                      notify('旧卡面清理失败，新卡面已正常保存');
-                    }
-                  }
-                  setEditing(null);
-                  notify('卡面已上传保存');
-                } catch (error) {
-                  notify((error as Error).message);
-                }
+              onSave={image => {
+                onCards(
+                  cards.map(card =>
+                    card.id === editing.id ? { ...card, image } : card,
+                  ),
+                );
+                setEditing(null);
+                notify('卡面已保存');
               }}
             />
           </dialog>
@@ -461,23 +418,15 @@ export function RewardsPage({
         title="删除这张奖励卡？"
         message={
           deleteTarget
-            ? `"${deleteTarget.title}"将从已抽区域和抽卡历史中一起移除，无法撤销。`
+            ? `“${deleteTarget.title}”将从已抽区域和抽卡历史中一起移除，无法撤销。`
             : ''
         }
         confirmLabel="确认删除"
         onCancel={() => setDeleteTarget(null)}
-        onConfirm={async () => {
-          if (!deleteTarget) return;
-          try {
-            if (deleteTarget.image) {
-              await deleteImageFromStorage(deleteTarget.image);
-            }
-            onDeleteCard(deleteTarget.id);
-            setDeleteTarget(null);
-            notify('卡片及对应抽卡记录已删除');
-          } catch {
-            notify('卡片图片删除失败，请稍后重试');
-          }
+        onConfirm={() => {
+          if (deleteTarget) onDeleteCard(deleteTarget.id);
+          setDeleteTarget(null);
+          notify('卡片及对应抽卡记录已删除');
         }}
       />
     </>

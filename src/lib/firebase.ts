@@ -10,7 +10,6 @@ import {
   persistentLocalCache,
   persistentMultipleTabManager,
 } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -25,7 +24,6 @@ export const firebaseApp = getApps().length
   ? getApp()
   : initializeApp(firebaseConfig);
 export const firebaseAuth = getAuth(firebaseApp);
-export const storage = getStorage(firebaseApp);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 void setPersistence(firebaseAuth, browserLocalPersistence);
