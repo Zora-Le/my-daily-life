@@ -154,10 +154,17 @@ export function useLifeStore(uid: string) {
         [date]: recipe(current.days[date] ?? emptyDay()),
       },
     }));
-  const importState = (raw: string) => {
+  const importState = async (raw: string) => {
     const parsed = JSON.parse(raw);
     if (parsed?.version !== 3) throw new Error('备份版本不兼容');
-    setState(normalizeLifeState(parsed));
+    const importedState = normalizeLifeState(parsed);
+    const cloudDocument = doc(firestore, 'users', uid, 'appData', 'lifeState');
+    await setDoc(cloudDocument, {
+      state: importedState,
+      schemaVersion: 3,
+      updatedAt: serverTimestamp(),
+    });
+    setState(importedState);
   };
   return {
     state,

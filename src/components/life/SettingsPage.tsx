@@ -11,7 +11,7 @@ import { ItemConfigPanel } from './ItemConfigPanel';
 
 interface Props {
   state: LifeState;
-  onImport: (raw: string) => void;
+  onImport: (raw: string) => Promise<void>;
   onProgressItems: (items: ConfigItem[]) => void;
   onHabitItems: (items: ConfigItem[]) => void;
   notify: (text: string) => void;
@@ -114,8 +114,8 @@ export function SettingsPage({
             const file = event.target.files?.[0];
             if (!file) return;
             try {
-              onImport(await file.text());
-              notify('备份已导入');
+              await onImport(await file.text());
+              notify('备份已导入并同步至云端');
             } catch (error) {
               notify((error as Error).message);
             }
