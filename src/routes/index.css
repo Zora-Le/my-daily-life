@@ -40,9 +40,16 @@ body {
     'Microsoft YaHei', sans-serif;
 }
 button,
-input {
+input,
+textarea,
+select {
   font: inherit;
   color: inherit;
+}
+input,
+textarea,
+select {
+  font-size: max(16px, 1em) !important;
 }
 button {
   cursor: pointer;
