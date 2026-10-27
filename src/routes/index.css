@@ -5524,7 +5524,7 @@ svg {
 }
 
 .week-calendar.week-journal {
-  touch-action: pan-x;
+  touch-action: pan-y;
 }
 
 .week-journal-row.range {

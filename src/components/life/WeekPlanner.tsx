@@ -51,6 +51,7 @@ export function WeekPlanner(props: Props) {
   const [deleteTarget, setDeleteTarget] = useState<LifeTask | null>(null);
   const [drag, setDrag] = useState<{ start: number; end: number } | null>(null);
   const journalRef = useRef<HTMLDivElement>(null);
+  const startPointRef = useRef<{ x: number; y: number } | null>(null);
   const suppressEmptyClickUntilRef = useRef(0);
   const holdTimerRef = useRef<number | null>(null);
   const holdOriginRef = useRef<{ x: number; y: number } | null>(null);
@@ -173,17 +174,47 @@ export function WeekPlanner(props: Props) {
               )
             )
               return;
+            if (event.pointerType === 'touch') {
+              startPointRef.current = {
+                x: event.clientX,
+                y: event.clientY,
+              };
+              return;
+            }
+            if (event.pointerType !== 'mouse') return;
             event.currentTarget.setPointerCapture(event.pointerId);
             const index = pointerDayIndex(event.clientY);
             setDrag({ start: index, end: index });
           }}
           onPointerMove={event => {
+            if (event.pointerType === 'touch' && !drag) {
+              const startPoint = startPointRef.current;
+              if (!startPoint) return;
+              const deltaX = Math.abs(event.clientX - startPoint.x);
+              const deltaY = Math.abs(event.clientY - startPoint.y);
+              if (deltaY > deltaX && deltaY > 5) {
+                startPointRef.current = null;
+                return;
+              }
+              if (deltaX <= 10) return;
+              event.currentTarget.setPointerCapture(event.pointerId);
+              const start = pointerDayIndex(startPoint.y);
+              setDrag({ start, end: pointerDayIndex(event.clientY) });
+              event.preventDefault();
+              return;
+            }
             if (!drag) return;
             event.preventDefault();
             setDrag({ ...drag, end: pointerDayIndex(event.clientY) });
           }}
-          onPointerUp={finishRangeSelection}
-          onPointerCancel={() => setDrag(null)}
+          onPointerUp={() => {
+            startPointRef.current = null;
+            finishRangeSelection();
+          }}
+          onPointerCancel={() => {
+            startPointRef.current = null;
+            setDrag(null);
+          }}
         >
           {days.map((iso, index) => {
             const info = cycleDayInfo(iso, props.menstrualRecords);
@@ -244,7 +275,7 @@ export function WeekPlanner(props: Props) {
                     </div>
                   )}
                 </div>
-                 <div
+                <div
                   className="week-journal-tasks"
                   onClick={event => {
                     if ((event.target as HTMLElement).closest('button')) return;

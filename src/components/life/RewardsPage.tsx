@@ -9,6 +9,7 @@ import {
   X,
 } from 'lucide-react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ConfirmModal } from './ConfirmModal';
 import { DrawingEditor } from './DrawingEditor';
 import { DrawnRewardsDeck } from './DrawnRewardsDeck';
@@ -280,110 +281,122 @@ export function RewardsPage({
         </div>
       )}
 
-      {adding && (
-        <div className="modal-mask" onPointerDown={closeAdd}>
-          <dialog
-            open
-            className="modal-sheet reward-create-sheet"
-            onPointerDown={event => event.stopPropagation()}
+      {adding &&
+        createPortal(
+          <div
+            className="modal-mask"
+            onPointerDown={event => {
+              event.stopPropagation();
+              closeAdd();
+            }}
           >
-            <div className="modal-head">
-              <div>
-                <span>NEW CARD</span>
-                <h2>添加一张奖励卡</h2>
-              </div>
-              <button onClick={closeAdd} aria-label="关闭">
-                <X />
-              </button>
-            </div>
-            {drawingDraft ? (
-              <DrawingEditor
-                notify={notify}
-                onSave={image => {
-                  setDraft(current => ({ ...current, image }));
-                  setDrawingDraft(false);
-                  notify('手绘卡面已暂存');
-                }}
-              />
-            ) : (
-              <>
-                <div className="reward-kind-picker">
-                  {(['sweet', 'joy'] as const).map(kind => (
-                    <button
-                      key={kind}
-                      className={draft.kind === kind ? 'active' : ''}
-                      onClick={() => setDraft({ ...draft, kind })}
-                    >
-                      {kindLabel(kind)}
-                    </button>
-                  ))}
+            <dialog
+              open
+              className="modal-sheet reward-create-sheet"
+              onPointerDown={event => event.stopPropagation()}
+            >
+              <div className="modal-head">
+                <div>
+                  <span>NEW CARD</span>
+                  <h2>添加一张奖励卡</h2>
                 </div>
-                <label>
-                  卡片标题
-                  <input
-                    maxLength={28}
-                    value={draft.title}
-                    onChange={event =>
-                      setDraft({ ...draft, title: event.target.value })
-                    }
-                    placeholder="例如：黄昏散步"
-                  />
-                </label>
-                <label>
-                  卡片文案
-                  <textarea
-                    maxLength={90}
-                    value={draft.copy}
-                    onChange={event =>
-                      setDraft({ ...draft, copy: event.target.value })
-                    }
-                    placeholder="写一句留给未来自己的话"
-                  />
-                </label>
-                <div className="card-image-picker">
-                  {draft.image ? (
-                    <img src={draft.image} alt="待保存卡面" />
-                  ) : (
-                    <BackPattern kind={draft.kind} />
-                  )}
-                  <div>
-                    <label className="image-upload-button">
-                      <ImagePlus size={15} /> 从相册选择
-                      <input
-                        hidden
-                        type="file"
-                        accept="image/*"
-                        onChange={async event => {
-                          const file = event.target.files?.[0];
-                          if (!file) return;
-                          try {
-                            const image = await compressImage(file, 900, 0.72);
-                            setDraft(current => ({ ...current, image }));
-                            notify('图片已压缩并载入');
-                          } catch (error) {
-                            notify((error as Error).message);
-                          }
-                          event.target.value = '';
-                        }}
-                      />
-                    </label>
-                    <button onClick={() => setDrawingDraft(true)}>
-                      <Paintbrush size={15} /> 打开简单画板
-                    </button>
-                    <small>
-                      支持手机相册图片；仅限图片且原文件不超过
-                      12MB。保存前会自动压缩，本地空间不足时会提示。
-                    </small>
-                  </div>
-                </div>
-                <button className="primary-action" onClick={saveDraft}>
-                  保存并加入卡池
+                <button onClick={closeAdd} aria-label="关闭">
+                  <X />
                 </button>
-              </>
-            )}
-          </dialog>
-        </div>
-      )}
+              </div>
+              {drawingDraft ? (
+                <DrawingEditor
+                  notify={notify}
+                  onSave={image => {
+                    setDraft(current => ({ ...current, image }));
+                    setDrawingDraft(false);
+                    notify('手绘卡面已暂存');
+                  }}
+                />
+              ) : (
+                <>
+                  <div className="reward-kind-picker">
+                    {(['sweet', 'joy'] as const).map(kind => (
+                      <button
+                        key={kind}
+                        className={draft.kind === kind ? 'active' : ''}
+                        onClick={() => setDraft({ ...draft, kind })}
+                      >
+                        {kindLabel(kind)}
+                      </button>
+                    ))}
+                  </div>
+                  <label>
+                    卡片标题
+                    <input
+                      maxLength={28}
+                      value={draft.title}
+                      onChange={event =>
+                        setDraft({ ...draft, title: event.target.value })
+                      }
+                      placeholder="例如：黄昏散步"
+                    />
+                  </label>
+                  <label>
+                    卡片文案
+                    <textarea
+                      maxLength={90}
+                      value={draft.copy}
+                      onChange={event =>
+                        setDraft({ ...draft, copy: event.target.value })
+                      }
+                      placeholder="写一句留给未来自己的话"
+                    />
+                  </label>
+                  <div className="card-image-picker">
+                    {draft.image ? (
+                      <img src={draft.image} alt="待保存卡面" />
+                    ) : (
+                      <BackPattern kind={draft.kind} />
+                    )}
+                    <div>
+                      <label className="image-upload-button">
+                        <ImagePlus size={15} /> 从相册选择
+                        <input
+                          hidden
+                          type="file"
+                          accept="image/*"
+                          onChange={async event => {
+                            const file = event.target.files?.[0];
+                            if (!file) return;
+                            try {
+                              const image = await compressImage(
+                                file,
+                                900,
+                                0.72,
+                              );
+                              setDraft(current => ({ ...current, image }));
+                              notify('图片已压缩并载入');
+                            } catch (error) {
+                              notify((error as Error).message);
+                            }
+                            event.target.value = '';
+                          }}
+                        />
+                      </label>
+                      <button onClick={() => setDrawingDraft(true)}>
+                        <Paintbrush size={15} /> 打开简单画板
+                      </button>
+                      <small>
+                        支持手机相册图片；仅限图片且原文件不超过
+                        12MB。保存前会自动压缩，本地空间不足时会提示。
+                      </small>
+                    </div>
+                  </div>
+                  <button className="primary-action" onClick={saveDraft}>
+                    保存并加入卡池
+                  </button>
+                </>
+              )}
+            </dialog>
+          </div>,
+          document.body,
+        )}
 
       {editing && !editing.id.startsWith('preview-') && (
         <div className="modal-mask">

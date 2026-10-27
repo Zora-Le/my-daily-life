@@ -71,8 +71,15 @@ export function useLifeStore(uid: string) {
           } else {
             const remote = snapshot.data().state;
             if (remote?.version === 3) {
+              // Mark applyingRemote BEFORE setCloudReady so the write-back
+              // useEffect sees the flag and skips the first sync cycle.
               applyingRemote.current = true;
               setState(normalizeLifeState(remote));
+              // Delay cloudReady until after the setState batch has flushed,
+              // preventing the write-back effect from racing with the remote load.
+              localStorage.setItem(migrationKey, '1');
+              if (active) setCloudReady(true);
+              return;
             }
             localStorage.setItem(migrationKey, '1');
           }
@@ -156,7 +163,8 @@ export function useLifeStore(uid: string) {
     }));
   const importState = async (raw: string) => {
     const parsed = JSON.parse(raw);
-    if (parsed?.version !== 3) throw new Error('备份版本不兼容');
+    if (!parsed || typeof parsed !== 'object')
+      throw new Error('备份文件格式无效');
     const importedState = normalizeLifeState(parsed);
     const cloudDocument = doc(firestore, 'users', uid, 'appData', 'lifeState');
     await setDoc(cloudDocument, {
