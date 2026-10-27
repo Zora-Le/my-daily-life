@@ -110,7 +110,7 @@ export function WeekPlanner(props: Props) {
       clearTaskHold();
     }
   };
-  const toggleTask = (task: LifeTask) => {
+  const toggleTask = (task: LifeTask, iso: string) => {
     const suppressClick =
       heldTaskIdRef.current === task.id &&
       Date.now() < suppressTaskClickUntilRef.current;
@@ -118,7 +118,12 @@ export function WeekPlanner(props: Props) {
     if (suppressClick) return;
     props.onTasks(
       props.tasks.map(item =>
-        item.id === task.id ? { ...item, done: !item.done } : item,
+        item.id === task.id
+          ? {
+              ...item,
+              done: { ...item.done, [iso]: !item.done[iso] },
+            }
+          : item,
       ),
     );
   };
@@ -284,22 +289,25 @@ export function WeekPlanner(props: Props) {
                   }}
                 >
                   {dayTasks.length > 0 ? (
-                    dayTasks.map(task => (
-                      <button
-                        key={task.id}
-                        className={`task-bar ${task.tone} ${task.done ? 'done' : ''}`}
-                        onPointerDown={event => startTaskHold(event, task)}
-                        onPointerMove={moveTaskHold}
-                        onPointerUp={clearTaskHold}
-                        onPointerCancel={clearTaskHold}
-                        onPointerLeave={clearTaskHold}
-                        onContextMenu={event => event.preventDefault()}
-                        onClick={() => toggleTask(task)}
-                      >
-                        {task.done && <Check size={11} />}
-                        <span>{task.title}</span>
-                      </button>
-                    ))
+                    dayTasks.map(task => {
+                      const done = Boolean(task.done[iso]);
+                      return (
+                        <button
+                          key={task.id}
+                          className={`task-bar ${task.tone} ${done ? 'done' : ''}`}
+                          onPointerDown={event => startTaskHold(event, task)}
+                          onPointerMove={moveTaskHold}
+                          onPointerUp={clearTaskHold}
+                          onPointerCancel={clearTaskHold}
+                          onPointerLeave={clearTaskHold}
+                          onContextMenu={event => event.preventDefault()}
+                          onClick={() => toggleTask(task, iso)}
+                        >
+                          {done && <Check size={11} />}
+                          <span>{task.title}</span>
+                        </button>
+                      );
+                    })
                   ) : (
                     <button
                       className="week-journal-empty"

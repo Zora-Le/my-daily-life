@@ -32,7 +32,7 @@ export type LifeTask = {
   title: string;
   start: string;
   end: string;
-  done: boolean;
+  done: Record<string, boolean>;
   tone: 'rose' | 'blue' | 'yellow';
 };
 export type ReadingItem = {
@@ -203,30 +203,31 @@ function normalizeMeal(meal?: Partial<Meal>): Meal {
   };
 }
 
-function normalizeDay(day: Partial<DayRecord>): DayRecord {
+function normalizeDay(day?: Partial<DayRecord> | null): DayRecord {
   const base = emptyDay();
-  const english = { ...base.english, ...(day.english ?? {}) };
+  const source = day && typeof day === 'object' ? day : {};
+  const english = { ...base.english, ...(source.english ?? {}) };
   return {
     ...base,
-    ...day,
+    ...source,
     meals: {
-      breakfast: normalizeMeal(day.meals?.breakfast),
-      lunch: normalizeMeal(day.meals?.lunch),
-      dinner: normalizeMeal(day.meals?.dinner),
+      breakfast: normalizeMeal(source.meals?.breakfast),
+      lunch: normalizeMeal(source.meals?.lunch),
+      dinner: normalizeMeal(source.meals?.dinner),
     },
-    exercise: { ...base.exercise, ...(day.exercise ?? {}) },
+    exercise: { ...base.exercise, ...(source.exercise ?? {}) },
     english,
     progress: {
       'progress-listening': { planned: english.listening, completed: false },
       'progress-speaking': { planned: english.speaking, completed: false },
-      ...(day.progress ?? {}),
+      ...(source.progress ?? {}),
     },
     habits: {
-      'habit-cardio': Boolean(day.exercise?.cardio),
-      'habit-strength': Boolean(day.exercise?.strength),
-      ...(day.habits ?? {}),
+      'habit-cardio': Boolean(source.exercise?.cardio),
+      'habit-strength': Boolean(source.exercise?.strength),
+      ...(source.habits ?? {}),
     },
-    dietNote: typeof day.dietNote === 'string' ? day.dietNote : '',
+    dietNote: typeof source.dietNote === 'string' ? source.dietNote : '',
   };
 }
 
@@ -310,10 +311,41 @@ export function normalizeSavings(
   return [];
 }
 
-type NormalizableLifeState = Partial<Omit<LifeState, 'version'>> & {
+type NormalizableLifeState = Partial<Omit<LifeState, 'version' | 'tasks'>> & {
   version?: unknown;
+  tasks?: unknown;
   platformSavings?: unknown;
 };
+
+function normalizeTasks(rawTasks: unknown): LifeTask[] {
+  if (!Array.isArray(rawTasks)) return [];
+  return rawTasks
+    .filter(task => task && typeof task === 'object')
+    .map((task, index) => {
+      const raw = task as Record<string, unknown>;
+      const start = typeof raw.start === 'string' ? raw.start : '';
+      const rawDone = raw.done;
+      const done =
+        rawDone && typeof rawDone === 'object' && !Array.isArray(rawDone)
+          ? Object.fromEntries(
+              Object.entries(rawDone).map(([date, value]) => [
+                date,
+                Boolean(value),
+              ]),
+            )
+          : rawDone === true && start
+            ? { [start]: true }
+            : {};
+      return {
+        id: Number(raw.id) || index + 1,
+        title: typeof raw.title === 'string' ? raw.title : '',
+        start,
+        end: typeof raw.end === 'string' ? raw.end : start,
+        done,
+        tone: raw.tone === 'rose' || raw.tone === 'yellow' ? raw.tone : 'blue',
+      };
+    });
+}
 
 export function normalizeRewardCards(
   rawCards: unknown,
@@ -413,7 +445,7 @@ export function normalizeLifeState(parsed: NormalizableLifeState): LifeState {
   return {
     version: 3,
     days,
-    tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+    tasks: normalizeTasks(parsed.tasks),
     phases:
       parsed.phases && typeof parsed.phases === 'object' ? parsed.phases : {},
     menstrualRecords: Array.isArray(parsed.menstrualRecords)

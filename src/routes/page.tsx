@@ -46,7 +46,8 @@ function Modal({
   );
 }
 function AppContent({ uid }: { uid: string }) {
-  const { state, update, updateDay, importState, cloudReady } = useLifeStore(uid);
+  const { state, update, updateDay, importState, cloudReady } =
+    useLifeStore(uid);
   const [page, setPage] = useState<PageKey>(() => {
     if (typeof window === 'undefined') return 'daily';
     const requested = new URLSearchParams(window.location.search).get('page');
@@ -136,7 +137,7 @@ function AppContent({ uid }: { uid: string }) {
               title: draft.title.trim(),
               start,
               end,
-              done: false,
+              done: {},
               tone: draft.tone,
             },
           ],
@@ -216,7 +217,7 @@ function AppContent({ uid }: { uid: string }) {
               habitItems={state.habitItems}
               onDate={setDate}
               onWeek={setWeek}
-              onDay={next => updateDay(date, () => next)}
+              onDay={recipe => updateDay(date, recipe)}
               onTasks={tasks => update(current => ({ ...current, tasks }))}
               onEditTask={task =>
                 setDraft({

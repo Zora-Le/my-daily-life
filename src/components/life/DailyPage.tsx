@@ -196,11 +196,10 @@ export function DailyPage(props: Props) {
         onChange={habits => onDay(current => ({ ...current, habits }))}
       />
       <MoodPanel
+        date={date}
         day={day}
         days={days}
-        onDay={patch =>
-          onDay(current => ({ ...current, ...patch }))
-        }
+        onDay={patch => onDay(current => ({ ...current, ...patch }))}
         notify={notify}
       />
       <JournalDrawer
