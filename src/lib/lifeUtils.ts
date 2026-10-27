@@ -79,7 +79,7 @@ export function safeCalculate(raw: string): number {
   return Math.round(result * 100) / 100;
 }
 
-export async function compressImage(file: File, maxSize = 900, quality = 0.72) {
+export async function compressImage(file: File, maxSize = 800, quality = 0.5) {
   if (!file.type.startsWith('image/')) throw new Error('请选择图片文件');
   if (file.size > 12 * 1024 * 1024) throw new Error('图片请小于 12MB');
   const source = await new Promise<string>((resolve, reject) => {

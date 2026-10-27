@@ -5,50 +5,69 @@ import { ConfirmModal } from './ConfirmModal';
 
 const MAX_IMAGES = 5;
 const MAX_SOURCE_BYTES = 8 * 1024 * 1024;
-const MAX_MEAL_BYTES = 1.8 * 1024 * 1024;
 const allowed = ['image/jpeg', 'image/png', 'image/webp'];
 
 interface Props {
+  uid: string;
   label: string;
   images: string[];
-  onChange: (images: string[]) => void;
+  disabled?: boolean;
+  onChange: (recipe: (current: string[]) => string[]) => void;
   notify: (text: string) => void;
 }
 
-export function MealGallery({ label, images, onChange, notify }: Props) {
+export function MealGallery({
+  uid,
+  label,
+  images,
+  disabled = false,
+  onChange,
+  notify,
+}: Props) {
   const upload = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
+  const [uploading, setUploading] = useState(false);
   const addImages = async (files: FileList | null) => {
-    if (!files?.length) return;
+    if (disabled || uploading || !files?.length) return;
+    setUploading(true);
     try {
       const incoming = Array.from(files);
       if (images.length + incoming.length > MAX_IMAGES) {
         throw new Error(`每餐最多保存 ${MAX_IMAGES} 张图片`);
       }
-      const next = [...images];
-      for (const file of incoming) {
-        if (!allowed.includes(file.type))
-          throw new Error('仅支持 JPG、PNG、WebP 图片');
-        if (file.size > MAX_SOURCE_BYTES) throw new Error('单张原图请小于 8MB');
-        const compressed = await compressImage(file, 640, 0.66);
-        next.push(compressed);
-        const bytes = next.reduce((sum, item) => sum + item.length * 0.75, 0);
-        if (bytes > MAX_MEAL_BYTES)
-          throw new Error('本餐图片容量已满，请删除后再上传');
+      const uploaded: string[] = [];
+      try {
+        for (const file of incoming) {
+          if (!allowed.includes(file.type))
+            throw new Error('仅支持 JPG、PNG、WebP 图片');
+          if (file.size > MAX_SOURCE_BYTES)
+            throw new Error('单张原图请小于 8MB');
+          const compressed = await compressImage(file, 800, 0.5);
+          uploaded.push(compressed);
+        }
+      } catch (error) {
+        throw error;
       }
-      onChange(next);
-      notify('图片已压缩保存');
+      onChange(current => [...current, ...uploaded]);
+      notify('图片已上传保存');
     } catch (error) {
       notify((error as Error).message);
     } finally {
+      setUploading(false);
       if (upload.current) upload.current.value = '';
     }
   };
-  const remove = () => {
+  const remove = async () => {
     if (pendingRemoval === null) return;
-    onChange(images.filter((_, index) => index !== pendingRemoval));
-    setPendingRemoval(null);
+    const image = images[pendingRemoval];
+    try {
+      onChange(current => current.filter(item => item !== image));
+      setPendingRemoval(null);
+      notify('图片已删除');
+    } catch {
+      notify('图片删除失败，请稍后重试');
+    }
   };
   return (
     <>
@@ -64,6 +83,7 @@ export function MealGallery({ label, images, onChange, notify }: Props) {
             </button>
             <button
               className="meal-image-remove"
+              disabled={disabled || uploading}
               onClick={() => setPendingRemoval(index)}
               aria-label={`删除${label}图片 ${index + 1}`}
             >
@@ -74,6 +94,7 @@ export function MealGallery({ label, images, onChange, notify }: Props) {
         {images.length < MAX_IMAGES && (
           <button
             className="meal-add"
+            disabled={disabled || uploading}
             onClick={() => upload.current?.click()}
             aria-label={`添加${label}图片`}
           >
@@ -85,6 +106,7 @@ export function MealGallery({ label, images, onChange, notify }: Props) {
       <input
         ref={upload}
         hidden
+        disabled={disabled || uploading}
         multiple
         type="file"
         accept="image/jpeg,image/png,image/webp"

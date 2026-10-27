@@ -1410,6 +1410,7 @@ svg {
   z-index: 20;
   display: flex;
   align-items: flex-end;
+  overflow-y: auto;
   justify-content: center;
   padding: 20px;
   background: rgba(45, 47, 45, 0.38);
@@ -3283,14 +3284,20 @@ svg {
   color: #898b85;
   font-size: 9px;
 }
-.mood-factor input {
+.mood-factor textarea {
   width: 100%;
+  min-height: 29px;
+  max-height: 120px;
   padding: 5px 0;
+  overflow-y: auto;
+  resize: none;
   border: 0;
   border-bottom: 1px solid #d5d1c8;
   outline: 0;
   background: transparent;
+  font: inherit;
   font-size: 11px;
+  line-height: 19px;
 }
 .mood-month {
   width: 100%;
@@ -3378,6 +3385,8 @@ svg {
   z-index: 45;
   display: flex;
   justify-content: center;
+  overflow: hidden;
+  overscroll-behavior: contain;
   background: rgba(48, 49, 46, 0.34);
 }
 .journal-drawer {
@@ -3387,6 +3396,8 @@ svg {
   margin-left: auto;
   padding: 25px 20px 40px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   background: #fffdf8;
   box-shadow: -14px 0 36px rgba(38, 36, 32, 0.15);
   animation: drawer-in .28s ease-out;
@@ -5091,6 +5102,7 @@ svg {
 .reward-create-sheet {
   max-height: 94vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: #faf8f2;
 }
 .reward-kind-picker {
@@ -5439,8 +5451,10 @@ svg {
   min-height: 52px;
   padding: 6px 10px;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex-flow: row wrap;
+  align-content: center;
+  align-items: center;
+  justify-content: flex-start;
   gap: 5px;
   background-image: linear-gradient(
     to bottom,
@@ -6208,6 +6222,10 @@ svg {
   color: #9b6158;
 }
 .money-edit-modal {
+  max-height: 94vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   gap: 12px;
 }
 .money-edit-modal > label {
@@ -6216,18 +6234,29 @@ svg {
   color: #777b76;
   font-size: 10px;
 }
-.money-edit-modal > label input {
+.money-edit-modal > label input,
+.money-edit-modal > label textarea {
   width: 100%;
-  height: 40px;
-  padding: 0 11px;
+  padding: 10px 11px;
   border: 1px solid #d9d6ce;
   border-radius: 12px;
   outline: 0;
   background: #fff;
   color: #4f5551;
+  font: inherit;
   font-size: 13px;
 }
-.money-edit-modal > label input:focus {
+.money-edit-modal > label input {
+  height: 40px;
+}
+.money-edit-modal > label textarea {
+  min-height: 88px;
+  max-height: 32vh;
+  resize: vertical;
+  overflow-y: auto;
+}
+.money-edit-modal > label input:focus,
+.money-edit-modal > label textarea:focus {
   border-color: #8fa39a;
 }
 .money-edit-detail {

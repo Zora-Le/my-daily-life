@@ -46,7 +46,7 @@ function Modal({
   );
 }
 function AppContent({ uid }: { uid: string }) {
-  const { state, update, updateDay, importState } = useLifeStore(uid);
+  const { state, update, updateDay, importState, cloudReady } = useLifeStore(uid);
   const [page, setPage] = useState<PageKey>(() => {
     if (typeof window === 'undefined') return 'daily';
     const requested = new URLSearchParams(window.location.search).get('page');
@@ -204,6 +204,8 @@ function AppContent({ uid }: { uid: string }) {
         <div className="content" key={page}>
           {page === 'daily' && (
             <DailyPage
+              uid={uid}
+              cloudReady={cloudReady}
               date={date}
               week={week}
               day={day}

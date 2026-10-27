@@ -20,6 +20,8 @@ const mealMeta = [
   { key: 'dinner', label: '晚餐' },
 ] as const;
 interface Props {
+  uid: string;
+  cloudReady: boolean;
   date: string;
   week: string;
   day: DayRecord;
@@ -29,20 +31,22 @@ interface Props {
   journals: JournalEntry[];
   habitItems: ConfigItem[];
   onDate: (date: string) => void;
-  onWeek: (date: string) => void;
-  onDay: (day: DayRecord) => void;
+  onWeek: (week: string) => void;
+  onDay: (recipe: (day: DayRecord) => DayRecord) => void;
   onTasks: (tasks: LifeTask[]) => void;
   onEditTask: (task: LifeTask) => void;
-  onDeleteTask: (taskId: number) => void;
-  onJournals: (items: JournalEntry[]) => void;
+  onDeleteTask: (id: number) => void;
+  onJournals: (entries: JournalEntry[]) => void;
   onMarkPeriodStart: (date: string) => void;
-  onMarkPeriodEnd: (date: string) => void;
-  onRemovePeriod: (date: string) => void;
-  openTask: (start: string, end: string) => void;
+  onMarkPeriodEnd: (date: string, endDate: string) => void;
+  onRemovePeriod: (startDate: string) => void;
+  openTask: (date: string, week: string) => void;
   notify: (text: string) => void;
 }
 export function DailyPage(props: Props) {
   const {
+    uid,
+    cloudReady,
     date,
     week,
     day,
@@ -65,10 +69,13 @@ export function DailyPage(props: Props) {
     notify,
   } = props;
   const setMeal = (key: keyof DayRecord['meals'], patch: Partial<Meal>) =>
-    onDay({
-      ...day,
-      meals: { ...day.meals, [key]: { ...day.meals[key], ...patch } },
-    });
+    onDay(current => ({
+      ...current,
+      meals: {
+        ...current.meals,
+        [key]: { ...current.meals[key], ...patch },
+      },
+    }));
   const selectDate = (next: string) => {
     onDate(next);
     onWeek(weekStart(next));
@@ -110,7 +117,7 @@ export function DailyPage(props: Props) {
         onDeleteTask={onDeleteTask}
         openTask={openTask}
       />
-      <section className="life-section diet-section">
+      <section className="life-section diet-section" aria-busy={!cloudReady}>
         <div className="section-heading diet-heading">
           <div className="diet-heading-copy">
             <h2>Daily diet</h2>
@@ -120,10 +127,16 @@ export function DailyPage(props: Props) {
                 type="text"
                 aria-label="今日体重目标和饮食规划"
                 value={day.dietNote}
+                disabled={!cloudReady}
                 onChange={event =>
-                  onDay({ ...day, dietNote: event.target.value })
+                  onDay(current => ({
+                    ...current,
+                    dietNote: event.target.value,
+                  }))
                 }
-                placeholder="今日体重目标 / 饮食规划"
+                placeholder={
+                  cloudReady ? '今日体重目标 / 饮食规划' : '数据加载中…'
+                }
               />
             </div>
           </div>
@@ -132,11 +145,12 @@ export function DailyPage(props: Props) {
               inputMode="decimal"
               aria-label="体重"
               value={day.weight ?? ''}
+              disabled={!cloudReady}
               onChange={event =>
-                onDay({
-                  ...day,
+                onDay(current => ({
+                  ...current,
                   weight: event.target.value.replace(/[^\d.]/g, ''),
-                })
+                }))
               }
             />
             <span>kg</span>
@@ -158,13 +172,16 @@ export function DailyPage(props: Props) {
                 </div>
                 <textarea
                   value={meal.text}
+                  disabled={!cloudReady}
                   onChange={event => setMeal(key, { text: event.target.value })}
-                  placeholder="吃了什么？"
+                  placeholder={cloudReady ? '吃了什么？' : '数据加载中…'}
                   rows={2}
                 />
                 <MealGallery
+                  uid={uid}
                   label={label}
                   images={meal.images}
+                  disabled={!cloudReady}
                   onChange={images => setMeal(key, { images })}
                   notify={notify}
                 />
@@ -176,9 +193,16 @@ export function DailyPage(props: Props) {
       <HabitCheckins
         items={habitItems}
         records={day.habits}
-        onChange={habits => onDay({ ...day, habits })}
+        onChange={habits => onDay(current => ({ ...current, habits }))}
       />
-      <MoodPanel date={date} day={day} days={days} onDay={onDay} />
+      <MoodPanel
+        day={day}
+        days={days}
+        onDay={patch =>
+          onDay(current => ({ ...current, ...patch }))
+        }
+        notify={notify}
+      />
       <JournalDrawer
         entries={journals}
         onEntries={onJournals}

@@ -244,9 +244,13 @@ export function WeekPlanner(props: Props) {
                     </div>
                   )}
                 </div>
-                <div
+                 <div
                   className="week-journal-tasks"
-                  onDoubleClick={() => props.openTask(iso, iso)}
+                  onClick={event => {
+                    if ((event.target as HTMLElement).closest('button')) return;
+                    if (Date.now() < suppressEmptyClickUntilRef.current) return;
+                    props.openTask(iso, iso);
+                  }}
                 >
                   {dayTasks.length > 0 ? (
                     dayTasks.map(task => (

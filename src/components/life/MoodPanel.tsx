@@ -9,7 +9,7 @@ import {
   Hammer,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 const moods = [
@@ -124,6 +124,13 @@ export function MoodPanel({
       ? new URLSearchParams(window.location.search).get('preview')
       : '';
   const [monthOpen, setMonthOpen] = useState(preview === 'month');
+  const moodFactorRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+  const input = moodFactorRef.current;
+  if (!input) return;
+  input.style.height = 'auto';
+  input.style.height = `${input.scrollHeight}px`;
+}, [day.moodFactor]);
   const shownMood = preview === 'mood' && !day.mood ? '焦虑' : day.mood;
   return (
     <section className="life-section mood-section">
@@ -149,11 +156,17 @@ export function MoodPanel({
           );
         })}
       </div>
-      {shownMood && (
+        {shownMood && (
         <label className="mood-factor">
           <span>今天主要被什么影响？</span>
-          <input
+          <textarea
+            ref={moodFactorRef}
+            rows={1}
             value={day.moodFactor ?? ''}
+            onInput={event => {
+              event.currentTarget.style.height = 'auto';
+              event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
+            }}
             onChange={event =>
               onDay({ ...day, moodFactor: event.target.value })
             }

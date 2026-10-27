@@ -37,9 +37,11 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
   const [editingTransaction, setEditingTransaction] =
     useState<MoneyTransaction | null>(null);
   const [editAmount, setEditAmount] = useState('');
+  const [editDetail, setEditDetail] = useState('');
   const bindLongPress = useLongPress((item: MoneyTransaction) => {
     setEditingTransaction(item);
     setEditAmount(formatCents(item.amountCents));
+    setEditDetail(item.detail);
   });
   const byDay = useMemo(() => {
     const map = new Map<string, MoneyTransaction[]>();
@@ -61,24 +63,28 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
     onChange(transactions.filter(item => item.id !== pendingRemoval));
     setPendingRemoval(null);
   };
-  const saveAmount = () => {
+  const saveTransaction = () => {
     if (!editingTransaction) return;
     try {
       const updated = createMoneyTransaction(
         editingTransaction.date,
         editingTransaction.kind,
         editAmount,
-        editingTransaction.detail,
+        editDetail,
       );
       onChange(
         transactions.map(item =>
           item.id === editingTransaction.id
-            ? { ...item, amountCents: updated.amountCents }
+            ? {
+                ...item,
+                amountCents: updated.amountCents,
+                detail: updated.detail,
+              }
             : item,
         ),
       );
       setEditingTransaction(null);
-      notify('金额已更新');
+      notify('收支明细已更新');
     } catch (error) {
       notify((error as Error).message);
     }
@@ -266,8 +272,8 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
           >
             <div className="modal-head">
               <div>
-                <span>EDIT AMOUNT</span>
-                <h2>编辑收支金额</h2>
+                <span>EDIT TRANSACTION</span>
+                <h2>编辑收支明细</h2>
               </div>
               <button
                 onClick={() => setEditingTransaction(null)}
@@ -276,7 +282,14 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
                 <X size={18} />
               </button>
             </div>
-            <p className="money-edit-detail">{editingTransaction.detail}</p>
+            <label>
+              明细
+              <textarea
+                value={editDetail}
+                onChange={event => setEditDetail(event.target.value)}
+                placeholder="收支明细"
+              />
+            </label>
             <label>
               金额
               <input
@@ -285,10 +298,10 @@ export function MoneyCalendar({ transactions, onChange, notify }: Props) {
                 onChange={event =>
                   setEditAmount(event.target.value.replace(/[^\d.]/g, ''))
                 }
-                onKeyDown={event => event.key === 'Enter' && saveAmount()}
+                onKeyDown={event => event.key === 'Enter' && saveTransaction()}
               />
             </label>
-            <button className="primary-action" onClick={saveAmount}>
+            <button className="primary-action" onClick={saveTransaction}>
               保存修改
             </button>
           </section>

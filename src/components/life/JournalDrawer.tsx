@@ -1,6 +1,6 @@
 import type { JournalEntry } from '@/hooks/useLifeStore';
 import { Feather, Send, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export function JournalDrawer({
   entries,
@@ -17,6 +17,14 @@ export function JournalDrawer({
       : '';
   const [open, setOpen] = useState(preview === 'journal');
   const [text, setText] = useState('');
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
   const publish = () => {
     if (!text.trim()) return notify('先写下一点此刻');
     const next = {
