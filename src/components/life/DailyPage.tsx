@@ -19,7 +19,7 @@ const mealMeta = [
   { key: 'lunch', label: '午餐' },
   { key: 'dinner', label: '晚餐' },
 ] as const;
-const dietScores = ['😞', '😐', '😊', '😄', '🌟'] as const;
+const dietScores = ['😞', '😐', '😊', '😄'] as const;
 interface Props {
   cloudReady: boolean;
   date: string;
