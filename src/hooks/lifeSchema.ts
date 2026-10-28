@@ -26,6 +26,7 @@ export type DayRecord = {
   moodFactor?: string;
   weight?: string;
   dietNote: string;
+  dietScore: number | null;
 };
 export type LifeTask = {
   id: number;
@@ -168,6 +169,7 @@ export const emptyDay = (): DayRecord => ({
   },
   habits: { 'habit-cardio': false, 'habit-strength': false },
   dietNote: '',
+  dietScore: null,
 });
 
 export const initialState: LifeState = {
@@ -228,6 +230,12 @@ function normalizeDay(day?: Partial<DayRecord> | null): DayRecord {
       ...(source.habits ?? {}),
     },
     dietNote: typeof source.dietNote === 'string' ? source.dietNote : '',
+    dietScore:
+      typeof source.dietScore === 'number' &&
+      source.dietScore >= 1 &&
+      source.dietScore <= 5
+        ? source.dietScore
+        : null,
   };
 }
 

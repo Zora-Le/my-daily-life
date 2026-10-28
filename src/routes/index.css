@@ -532,6 +532,37 @@ svg {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.diet-score {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.diet-score > span {
+  color: var(--muted);
+  font-size: 10px;
+}
+.diet-score-options {
+  display: flex;
+  gap: 3px;
+}
+.diet-score-options button {
+  width: 28px;
+  height: 25px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 15px;
+  line-height: 1;
+  opacity: 0.55;
+}
+.diet-score-options button.selected {
+  border-color: #cad8d2;
+  background: #edf3f0;
+  opacity: 1;
+  transform: scale(1.08);
+}
 .exercise-list {
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -3978,18 +4009,6 @@ svg {
   border-radius: 50%;
   background: #7e817d;
   color: white;
-}
-.meal-gallery .meal-add {
-  width: 39px !important;
-  height: 39px !important;
-  flex: none;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: grid !important;
-  place-items: center;
-  gap: 0 !important;
-  border: 1px dashed #d2cec6 !important;
-  background: #f1eee7 !important;
 }
 .image-lightbox {
   position: fixed;

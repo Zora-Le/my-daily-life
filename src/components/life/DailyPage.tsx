@@ -19,8 +19,8 @@ const mealMeta = [
   { key: 'lunch', label: '午餐' },
   { key: 'dinner', label: '晚餐' },
 ] as const;
+const dietScores = ['😞', '😐', '😊', '😄', '🌟'] as const;
 interface Props {
-  uid: string;
   cloudReady: boolean;
   date: string;
   week: string;
@@ -45,7 +45,6 @@ interface Props {
 }
 export function DailyPage(props: Props) {
   const {
-    uid,
     cloudReady,
     date,
     week,
@@ -178,7 +177,6 @@ export function DailyPage(props: Props) {
                   rows={2}
                 />
                 <MealGallery
-                  uid={uid}
                   label={label}
                   images={meal.images}
                   disabled={!cloudReady}
@@ -188,6 +186,32 @@ export function DailyPage(props: Props) {
               </article>
             );
           })}
+        </div>
+        <div className="diet-score">
+          <span>今日饮食打分</span>
+          <div className="diet-score-options">
+            {dietScores.map((emoji, index) => {
+              const score = index + 1;
+              return (
+                <button
+                  type="button"
+                  className={day.dietScore === score ? 'selected' : ''}
+                  aria-label={`今日饮食 ${score} 分`}
+                  aria-pressed={day.dietScore === score}
+                  disabled={!cloudReady}
+                  key={emoji}
+                  onClick={() =>
+                    onDay(current => ({
+                      ...current,
+                      dietScore: current.dietScore === score ? null : score,
+                    }))
+                  }
+                >
+                  {emoji}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </section>
       <HabitCheckins

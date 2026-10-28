@@ -1,14 +1,8 @@
-import { compressImage } from '@/lib/lifeUtils';
-import { Camera, Plus, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { X } from 'lucide-react';
+import { useState } from 'react';
 import { ConfirmModal } from './ConfirmModal';
 
-const MAX_IMAGES = 5;
-const MAX_SOURCE_BYTES = 8 * 1024 * 1024;
-const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-
 interface Props {
-  uid: string;
   label: string;
   images: string[];
   disabled?: boolean;
@@ -17,47 +11,14 @@ interface Props {
 }
 
 export function MealGallery({
-  uid,
   label,
   images,
   disabled = false,
   onChange,
   notify,
 }: Props) {
-  const upload = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const addImages = async (files: FileList | null) => {
-    if (disabled || uploading || !files?.length) return;
-    setUploading(true);
-    try {
-      const incoming = Array.from(files);
-      if (images.length + incoming.length > MAX_IMAGES) {
-        throw new Error(`每餐最多保存 ${MAX_IMAGES} 张图片`);
-      }
-      const uploaded: string[] = [];
-      try {
-        for (const file of incoming) {
-          if (!allowed.includes(file.type))
-            throw new Error('仅支持 JPG、PNG、WebP 图片');
-          if (file.size > MAX_SOURCE_BYTES)
-            throw new Error('单张原图请小于 8MB');
-          const compressed = await compressImage(file, 800, 0.5);
-          uploaded.push(compressed);
-        }
-      } catch (error) {
-        throw error;
-      }
-      onChange(current => [...current, ...uploaded]);
-      notify('图片已上传保存');
-    } catch (error) {
-      notify((error as Error).message);
-    } finally {
-      setUploading(false);
-      if (upload.current) upload.current.value = '';
-    }
-  };
   const remove = async () => {
     if (pendingRemoval === null) return;
     const image = images[pendingRemoval];
@@ -83,7 +44,7 @@ export function MealGallery({
             </button>
             <button
               className="meal-image-remove"
-              disabled={disabled || uploading}
+              disabled={disabled}
               onClick={() => setPendingRemoval(index)}
               aria-label={`删除${label}图片 ${index + 1}`}
             >
@@ -91,27 +52,7 @@ export function MealGallery({
             </button>
           </div>
         ))}
-        {images.length < MAX_IMAGES && (
-          <button
-            className="meal-add"
-            disabled={disabled || uploading}
-            onClick={() => upload.current?.click()}
-            aria-label={`添加${label}图片`}
-          >
-            {images.length ? <Plus size={15} /> : <Camera size={15} />}
-            {!images.length && <small>添图</small>}
-          </button>
-        )}
       </div>
-      <input
-        ref={upload}
-        hidden
-        disabled={disabled || uploading}
-        multiple
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        onChange={event => addImages(event.target.files)}
-      />
       {preview && (
         <div
           className="image-lightbox"

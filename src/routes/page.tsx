@@ -205,7 +205,6 @@ function AppContent({ uid }: { uid: string }) {
         <div className="content" key={page}>
           {page === 'daily' && (
             <DailyPage
-              uid={uid}
               cloudReady={cloudReady}
               date={date}
               week={week}
